@@ -39,21 +39,35 @@
 
   <script src="/js/site.js"></script>
   <script>
+    // Guards against a race: every +/−/Remove click triggers render(), and the
+    // product fetch is async — a slow, older render must never overwrite the
+    // DOM after a newer one (e.g. re-drawing an item that was just removed).
+    let renderSeq = 0;
+    let catalog = null; // fetched once per page view: { byId, ship }
+
     async function render() {
+      const seq = ++renderSeq;
       const items = PM.cart.read();
       const layout = document.getElementById('cart-layout');
       const empty = document.getElementById('cart-empty');
       if (!items.length) {
         layout.hidden = true;
         empty.hidden = false;
+        document.getElementById('cart-lines').innerHTML = '';
         return;
       }
 
-      const [all, ship] = await Promise.all([
-        PM.api('/api/products'),
-        PM.api('/api/settings/shipping'),
-      ]);
-      const byId = Object.fromEntries(all.map(p => [p.id, p]));
+      if (!catalog) {
+        const [all, ship] = await Promise.all([
+          PM.api('/api/products'),
+          PM.api('/api/settings/shipping'),
+        ]);
+        // a newer render superseded this one while we were fetching
+        if (seq !== renderSeq) return;
+        catalog = { byId: Object.fromEntries(all.map(p => [p.id, p])), ship };
+      }
+
+      const { byId, ship } = catalog;
       const lines = items.map(i => ({ ...i, p: byId[i.id] })).filter(l => l.p);
 
       // prune items that no longer exist
