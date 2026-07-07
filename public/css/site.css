@@ -157,6 +157,13 @@ p { margin: 0 0 1em; }
 
 .nav-folder__menu a { padding: 0.5rem 1.2rem; }
 
+/* Over the hero the folder menu is fully transparent (reference style);
+   it gets its solid background back once the header shrinks on scroll. */
+.site-header--transparent:not(.shrink) .nav-folder__menu {
+  background: transparent;
+  border-color: transparent;
+}
+
 .site-logo { justify-self: center; display: flex; align-items: center; text-decoration: none; }
 
 .site-logo img {
@@ -192,6 +199,34 @@ p { margin: 0 0 1em; }
 .burger { display: none; background: none; border: 0; cursor: pointer; padding: 0.3rem; }
 .burger svg { width: 26px; height: 26px; display: block; }
 
+/* ---------------- transparent header (over the homepage hero) ----------- */
+/* The mount wrapper (announcement bar + header) floats over the hero.      */
+.header-mount--transparent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.site-header--transparent {
+  position: static;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom: 0;
+}
+
+/* Scrolled: shrink into a fixed solid bar (reference site's .shrink). */
+.site-header--transparent.shrink {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: hsla(var(--white-hsl), 0.98);
+  backdrop-filter: none;
+  border-bottom: 1px solid hsla(var(--black-hsl), 0.08);
+}
+
 /* mobile menu */
 .mobile-menu {
   display: none;
@@ -214,7 +249,8 @@ p { margin: 0 0 1em; }
 
 .section--hero {
   position: relative;
-  min-height: 92vh;
+  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -657,9 +693,11 @@ details.faq p { margin: 0.9rem 0 0; opacity: 0.85; }
   .product-grid, .product-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .form-grid { grid-template-columns: 1fr; }
   .section--hero {
-    min-height: 82vh;
+    min-height: 96vh;
+    min-height: 96svh;
     align-items: flex-start;
-    padding-top: clamp(3rem, 9vh, 5rem);
+    /* clear the transparent header + announcement bar floating on top */
+    padding-top: clamp(9rem, 22vh, 12rem);
   }
   .section--hero::after {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.78) 36%, rgba(255, 255, 255, 0.08) 100%);

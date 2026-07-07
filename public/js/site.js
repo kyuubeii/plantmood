@@ -173,7 +173,21 @@ const FOOTER_HTML = `
 
 document.addEventListener('DOMContentLoaded', () => {
   const headerMount = document.getElementById('site-header');
-  if (headerMount) headerMount.innerHTML = NAV_HTML;
+  if (headerMount) {
+    headerMount.innerHTML = NAV_HTML;
+
+    // Transparent header mode (homepage hero): the header floats over the hero
+    // with no background; once the user scrolls, it shrinks into a fixed solid
+    // bar — mirroring the reference site's transparent → .shrink behaviour.
+    if (headerMount.hasAttribute('data-transparent')) {
+      headerMount.classList.add('header-mount--transparent');
+      const hdr = headerMount.querySelector('.site-header');
+      hdr.classList.add('site-header--transparent');
+      const onScroll = () => hdr.classList.toggle('shrink', window.scrollY > 80);
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+  }
 
   const footerMount = document.getElementById('site-footer');
   if (footerMount) footerMount.innerHTML = FOOTER_HTML;
