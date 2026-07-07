@@ -16,8 +16,8 @@
   --sage: #8ba86e;
   --line: hsla(var(--black-hsl), 0.15);
 
-  --heading-font: 'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --body-font: 'Hanken Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --heading-font: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --body-font: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
 
   --pad-x: 4vw;
   --max-w: 1560px;
@@ -47,11 +47,11 @@ a { color: inherit; }
 
 h1, h2, h3, h4 {
   font-family: var(--heading-font);
-  font-stretch: 125%;
+  font-stretch: normal;
   font-weight: 500;
   line-height: 1.14;
   margin: 0 0 0.6em;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 h1 { font-size: clamp(2.4rem, 5vw, 3.5rem); }
@@ -372,6 +372,7 @@ p { margin: 0 0 1em; }
 }
 
 .hero-content h1 {
+  color: var(--sage);
   font-size: clamp(2.55rem, 4.8vw, 5rem);
   font-weight: 450;
   line-height: 1.04;
