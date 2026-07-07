@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product — Plantmood</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900&family=Hanken+Grotesk:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="section__inner">
+      <div id="product-mount">
+        <p class="empty-note">Loading…</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0;" id="related-section" hidden>
+    <div class="section__inner">
+      <div class="section-head">
+        <h3>You may also like</h3>
+      </div>
+      <div class="product-grid product-grid--3" id="related-grid"></div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script src="/js/site.js"></script>
+  <script>
+    (async () => {
+      const slug = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
+      const mount = document.getElementById('product-mount');
+      let p;
+      if (!slug) {
+        mount.innerHTML = '<p class="empty-note">Sorry — we could not find that plant. <a href="/shop">Back to the shop</a>.</p>';
+        return;
+      }
+      try {
+        p = await PM.api('/api/products/' + encodeURIComponent(slug));
+      } catch {
+        mount.innerHTML = '<p class="empty-note">Sorry — we could not find that plant. <a href="/shop">Back to the shop</a>.</p>';
+        return;
+      }
+
+      document.title = p.name + ' — Plantmood';
+
+      mount.innerHTML = `
+        <div class="product-detail">
+          <div class="product-detail__gallery">
+            <img src="${PM.esc(p.image)}" alt="${PM.esc(p.alt || p.name)}">
+          </div>
+          <div class="product-detail__info">
+            <a class="crumb" href="/shop/${PM.esc(p.category)}">${PM.esc(p.categoryName || p.category)}</a>
+            <h1>${PM.esc(p.name)}</h1>
+            ${p.species ? `<p class="product-detail__species">${PM.esc(p.species)}</p>` : ''}
+            <p class="product-detail__price">${PM.money(p.price)}</p>
+            ${p.soldOut ? `
+              <button class="btn add-to-cart" disabled>Sold out</button>
+            ` : `
+              <div class="qty-row">
+                <div class="qty-stepper">
+                  <button type="button" id="qty-minus" aria-label="Decrease quantity">−</button>
+                  <span class="qty-val" id="qty-val">1</span>
+                  <button type="button" id="qty-plus" aria-label="Increase quantity">+</button>
+                </div>
+              </div>
+              <button class="btn btn--solid add-to-cart" id="add-btn">Add to Cart</button>
+            `}
+            ${p.care ? `<div class="care-note"><strong>Care</strong> — ${PM.esc(p.care)}</div>` : ''}
+            <p style="margin-top:1.4rem;">${PM.esc(p.description)}</p>
+          </div>
+        </div>`;
+
+      if (!p.soldOut) {
+        let qty = 1;
+        const val = document.getElementById('qty-val');
+        document.getElementById('qty-minus').onclick = () => { qty = Math.max(1, qty - 1); val.textContent = qty; };
+        document.getElementById('qty-plus').onclick = () => { qty = Math.min(99, qty + 1); val.textContent = qty; };
+        document.getElementById('add-btn').onclick = () => {
+          PM.cart.add(p.id, qty);
+          PM.toast('Added to cart — ' + p.name);
+        };
+      }
+
+      if (p.related && p.related.length) {
+        document.getElementById('related-section').hidden = false;
+        document.getElementById('related-grid').innerHTML = p.related.map(r => `
+          <a class="product-card" href="/product/${PM.esc(r.slug)}">
+            <div class="product-card__media">
+              <img src="${PM.esc(r.image)}" alt="${PM.esc(r.alt || r.name)}" loading="lazy">
+              ${r.soldOut ? '<span class="product-mark">sold out</span>' : ''}
+            </div>
+            <p class="product-card__name">${PM.esc(r.name)}</p>
+            <p class="product-card__price">${PM.money(r.price)}</p>
+          </a>`).join('');
+      }
+    })().catch(console.error);
+  </script>
+</body>
+</html>

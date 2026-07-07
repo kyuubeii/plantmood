@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop — Plantmood</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900&family=Hanken+Grotesk:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section shop-head">
+    <div class="section__inner">
+      <h1 id="shop-title">Shop All</h1>
+      <p id="shop-tagline">Every green in the studio — potted, soil-free, floating in water, or living on air.</p>
+      <div class="cat-pills" id="cat-pills"></div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0;">
+    <div class="section__inner">
+      <div class="product-grid" id="shop-grid"></div>
+      <p class="empty-note" id="shop-empty" hidden>No products in this series yet — check back soon.</p>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script src="/js/site.js"></script>
+  <script>
+    (async () => {
+      const parts = location.pathname.split('/').filter(Boolean);
+      const activeCat = parts.length === 2 && parts[0] === 'shop' ? decodeURIComponent(parts[1]) : null;
+
+      const cats = await PM.api('/api/categories');
+      const pills = [`<a href="/shop" class="${!activeCat ? 'active' : ''}">All</a>`]
+        .concat(cats.map(c =>
+          `<a href="/shop/${PM.esc(c.slug)}" class="${activeCat === c.slug ? 'active' : ''}">${PM.esc(c.name)}</a>`));
+      document.getElementById('cat-pills').innerHTML = pills.join('');
+
+      const cat = cats.find(c => c.slug === activeCat);
+      if (cat) {
+        document.getElementById('shop-title').textContent = cat.name;
+        document.getElementById('shop-tagline').textContent = cat.tagline || '';
+        document.title = cat.name + ' — Plantmood';
+      } else if (activeCat) {
+        document.getElementById('shop-title').textContent = 'Not found';
+        document.getElementById('shop-tagline').textContent = 'That series does not exist.';
+      }
+
+      const products = await PM.api('/api/products' + (activeCat ? '?category=' + encodeURIComponent(activeCat) : ''));
+      const grid = document.getElementById('shop-grid');
+      grid.innerHTML = products.map(p => `
+        <a class="product-card" href="/product/${PM.esc(p.slug)}">
+          <div class="product-card__media">
+            <img src="${PM.esc(p.image)}" alt="${PM.esc(p.alt || p.name)}" loading="lazy">
+            ${p.soldOut ? '<span class="product-mark">sold out</span>' : ''}
+          </div>
+          <p class="product-card__name">${PM.esc(p.name)}</p>
+          <p class="product-card__price">${PM.money(p.price)}</p>
+        </a>`).join('');
+      document.getElementById('shop-empty').hidden = products.length > 0;
+    })().catch(console.error);
+  </script>
+</body>
+</html>

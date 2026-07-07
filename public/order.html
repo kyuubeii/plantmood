@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmation — Plantmood</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900&family=Hanken+Grotesk:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="section__inner" style="max-width:720px;">
+      <div id="order-mount"><p class="empty-note">Loading…</p></div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script src="/js/site.js"></script>
+  <script>
+    (async () => {
+      const orderNo = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
+      const token = new URLSearchParams(location.search).get('token') || '';
+      const mount = document.getElementById('order-mount');
+      let o;
+      try {
+        o = await PM.api('/api/orders/' + encodeURIComponent(orderNo) + '?token=' + encodeURIComponent(token));
+      } catch {
+        mount.innerHTML = '<p class="empty-note">We could not find that order. <a href="/shop">Back to the shop</a>.</p>';
+        return;
+      }
+
+      // Build the WhatsApp message the customer sends to the shop to confirm the order.
+      let waUrl = '';
+      try {
+        const cfg = await PM.api('/api/settings/shipping');
+        if (cfg.whatsapp) {
+          const addr = [o.address1, o.address2, `${o.postcode} ${o.city}`, o.state]
+            .filter(Boolean).join(', ');
+          const lines = [
+            `Hi Plantmood! I'd like to confirm my order 🌱`,
+            ``,
+            `*Order:* ${o.orderNo}`,
+            ``,
+            ...o.items.map(i => `• ${i.name} × ${i.qty} — ${PM.money(i.price * i.qty)}`),
+            ``,
+            `Subtotal: ${PM.money(o.subtotal)}`,
+            `Delivery: ${o.shipping === 0 ? 'Free' : PM.money(o.shipping)}`,
+            `*Total: ${PM.money(o.total)}*`,
+            ``,
+            `*Name:* ${o.name}`,
+            `*Phone:* ${o.phone || '-'}`,
+            `*Email:* ${o.email || '-'}`,
+            `*Deliver to:* ${addr}`,
+            o.notes ? `*Notes:* ${o.notes}` : '',
+          ].filter(l => l !== '' || true);
+          waUrl = `https://wa.me/${cfg.whatsapp}?text=${encodeURIComponent(lines.join('\n'))}`;
+        }
+      } catch { /* WhatsApp is optional; page still works without it */ }
+
+      mount.innerHTML = `
+        <h1>Thank you, ${PM.esc(o.name.split(' ')[0])}! 🌱</h1>
+        <p>Your order has been recorded.${waUrl ? ' <strong>One more step:</strong> tap the button below to send it to us on WhatsApp so we can confirm payment and delivery.' : ' We will contact you shortly to arrange payment and delivery.'}</p>
+        ${waUrl ? `
+          <a class="btn btn--solid" href="${PM.esc(waUrl)}" target="_blank" rel="noopener" id="wa-btn"
+             style="margin:1.4rem 0 0.6rem;display:inline-flex;align-items:center;gap:0.5rem;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.3-5-4.5-.2-.2-1.2-1.6-1.2-3s.7-2.1 1-2.4c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.5-.3.3c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.8.9.8 1.7 1.1 2 1.2.2.1.4.1.5-.1l.6-.7c.2-.2.4-.2.6-.1l1.9.9c.3.1.4.2.5.3.1.2.1.6-.1 1.2Z"/></svg>
+            Send my order on WhatsApp
+          </a>
+          <p class="muted" style="font-size:0.88rem;">Didn't open? <a href="${PM.esc(waUrl)}" target="_blank" rel="noopener">Tap here</a>.</p>
+        ` : ''}
+        <div class="summary-card" style="position:static;margin-top:1.6rem;">
+          <div class="summary-row"><span>Order number</span><strong>${PM.esc(o.orderNo)}</strong></div>
+          <div class="summary-row"><span>Status</span><span style="text-transform:capitalize;">${PM.esc(o.status)}</span></div>
+          <hr style="border:0;border-top:1px solid var(--line);margin:1rem 0;">
+          ${o.items.map(i => `
+            <div class="summary-row"><span>${PM.esc(i.name)} × ${i.qty}</span><span>${PM.money(i.price * i.qty)}</span></div>
+          `).join('')}
+          <div class="summary-row" style="margin-top:0.6rem;"><span>Subtotal</span><span>${PM.money(o.subtotal)}</span></div>
+          <div class="summary-row"><span>Delivery</span><span>${o.shipping === 0 ? 'Free' : PM.money(o.shipping)}</span></div>
+          <div class="summary-row total"><span>Total</span><span>${PM.money(o.total)}</span></div>
+        </div>
+        <div style="margin-top:2rem;">
+          <a class="btn" href="/shop">Continue shopping</a>
+        </div>`;
+
+      // Auto-open WhatsApp once (from the just-placed order); popup blockers may
+      // stop this, which is why the button above is the primary path.
+      if (waUrl && new URLSearchParams(location.search).get('new') === '1') {
+        window.open(waUrl, '_blank');
+      }
+    })().catch(console.error);
+  </script>
+</body>
+</html>

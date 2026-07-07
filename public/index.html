@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plantmood — Soil-free Plants &amp; Curated Greens, Kuala Lumpur</title>
+  <meta name="description" content="Plantmood is a Kuala Lumpur plant studio for soil-free plants, hydroponics, bonsai, air plants and gift-ready greens.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900&family=Hanken+Grotesk:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <!-- 1 · hero -->
+  <section class="section--hero hero-airplant">
+    <div class="hero-content">
+      <h1>Plant a little piece<br>of your mood</h1>
+      <a class="btn" href="/shop">Shop Now</a>
+    </div>
+    <div class="hero-plant" aria-hidden="true">
+      <img src="/images/hero/plantmood-hero-airplant-focus-tight.jpg" alt="">
+    </div>
+  </section>
+
+  <!-- 2 · featured products -->
+  <section class="section">
+    <div class="section__inner">
+      <div class="section-head">
+        <h3>Featured Products</h3>
+        <a class="view-all" href="/shop">View All</a>
+      </div>
+      <div class="product-grid" id="featured-grid"></div>
+    </div>
+  </section>
+
+  <!-- 3 · dark inset banner · events -->
+  <section class="section--inset theme-black on-dark">
+    <div class="inset-frame" style="background-image:url('/images/landscape/landscape-02.jpg')">
+      <div class="banner-content">
+        <h2>Plantmood Pop-ups<br>&amp; Styling Sessions</h2>
+        <a class="btn" href="/events">Book now</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · spotlight · soil-free series -->
+  <section class="section">
+    <div class="section__inner">
+      <div class="center" style="max-width:720px;margin:0 auto 3rem;">
+        <h2>The Soil-free Series</h2>
+        <p class="muted">Real plants raised in a clean, soilless medium — no spills, no repotting, no fuss. Our signature series, arranged by hand in the studio.</p>
+      </div>
+      <div class="product-grid product-grid--3" id="soilfree-grid"></div>
+      <div class="center" style="margin-top:2.6rem;">
+        <a class="btn" href="/shop/soilfree">View the series</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · category banner · gifts -->
+  <section class="section--banner align-center overlay-light" style="background-image:url('/images/event/event-03.jpg')">
+    <div class="banner-content">
+      <h3>Gifts that grow on people</h3>
+      <a class="btn" href="/shop/gifts">Shop now</a>
+    </div>
+  </section>
+
+  <!-- 6 · category banner · floor plants -->
+  <section class="section--banner align-center" style="background-image:url('/images/floor/floor-03.jpg')">
+    <div class="banner-content">
+      <h3>Statement greens for empty corners</h3>
+      <a class="btn" href="/shop/floor">Shop now</a>
+    </div>
+  </section>
+
+  <!-- 7 · light info banner · plant care -->
+  <section class="section--banner align-center overlay-light" style="background-image:url('/images/tabletop/tabletop-06.jpg');min-height:60vh;">
+    <div class="banner-content">
+      <h3>Most plants need less from you than you think.</h3>
+      <a class="btn" href="/plant-care">Learn More</a>
+    </div>
+  </section>
+
+  <!-- 8 · mission · black -->
+  <section class="section--inset theme-black on-dark">
+    <div class="inset-frame" style="background-image:url('/images/event/event-01.jpg')">
+      <div class="banner-content">
+        <h4 style="font-size:clamp(1.4rem,2.6vw,2rem);font-weight:500;">We match people with plants that fit their light, their schedule and their mood — so the green actually sticks around.</h4>
+        <a class="btn" href="/about">Find out more</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · instagram -->
+  <section class="section">
+    <div class="section__inner">
+      <div class="center" style="margin-bottom:2.2rem;">
+        <h3>Follow us</h3>
+        <p class="muted"><a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener">@plantmood.my</a></p>
+      </div>
+      <div class="insta-grid">
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/event/event-04.jpg" alt="Plantmood pop-up table with plants and brand cards" loading="lazy"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/gifts/gifts-01.jpg" alt="Gift series arrangement" loading="lazy"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/airplants/airplants-03.jpg" alt="Air plant in ceramic orb" loading="lazy"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/bonsai/bonsai-02.jpg" alt="Monstera adansonii in glass hydro jar" loading="lazy"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/hydroponic/hydroponic-01.jpg" alt="White anthurium growing in water" loading="lazy"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/soilfree/soilfree-01.jpg" alt="Ficus stone garden bowl" loading="lazy"></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · newsletter + footer -->
+  <div id="site-footer"></div>
+
+  <script src="/js/site.js"></script>
+  <script>
+    function cardHTML(p) {
+      return `
+        <a class="product-card" href="/product/${PM.esc(p.slug)}">
+          <div class="product-card__media">
+            <img src="${PM.esc(p.image)}" alt="${PM.esc(p.alt || p.name)}" loading="lazy">
+            ${p.soldOut ? '<span class="product-mark">sold out</span>' : ''}
+          </div>
+          <p class="product-card__name">${PM.esc(p.name)}</p>
+          <p class="product-card__price">${PM.money(p.price)}</p>
+        </a>`;
+    }
+
+    (async () => {
+      try {
+        const featured = await PM.api('/api/products?featured=1');
+        document.getElementById('featured-grid').innerHTML =
+          featured.slice(0, 4).map(cardHTML).join('');
+
+        const soilfree = await PM.api('/api/products?category=soilfree');
+        document.getElementById('soilfree-grid').innerHTML =
+          soilfree.filter(p => !p.soldOut).slice(0, 3).map(cardHTML).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  </script>
+</body>
+</html>

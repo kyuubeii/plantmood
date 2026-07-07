@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart — Plantmood</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900&family=Hanken+Grotesk:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="section__inner">
+      <h1>Your Cart</h1>
+      <div class="cart-layout" id="cart-layout" hidden>
+        <div id="cart-lines"></div>
+        <aside class="summary-card">
+          <div class="summary-row"><span>Subtotal</span><span id="sum-subtotal"></span></div>
+          <div class="summary-row"><span>Delivery</span><span id="sum-shipping"></span></div>
+          <div class="summary-row total"><span>Total</span><span id="sum-total"></span></div>
+          <p class="free-ship-note" id="free-ship-note"></p>
+          <a class="btn btn--solid" style="width:100%;text-align:center;" href="/checkout">Checkout</a>
+        </aside>
+      </div>
+      <div class="empty-note" id="cart-empty" hidden>
+        <p>Your cart is empty.</p>
+        <a class="btn" href="/shop">Browse the shop</a>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script src="/js/site.js"></script>
+  <script>
+    async function render() {
+      const items = PM.cart.read();
+      const layout = document.getElementById('cart-layout');
+      const empty = document.getElementById('cart-empty');
+      if (!items.length) {
+        layout.hidden = true;
+        empty.hidden = false;
+        return;
+      }
+
+      const [all, ship] = await Promise.all([
+        PM.api('/api/products'),
+        PM.api('/api/settings/shipping'),
+      ]);
+      const byId = Object.fromEntries(all.map(p => [p.id, p]));
+      const lines = items.map(i => ({ ...i, p: byId[i.id] })).filter(l => l.p);
+
+      // prune items that no longer exist
+      if (lines.length !== items.length) PM.cart.write(lines.map(l => ({ id: l.id, qty: l.qty })));
+
+      if (!lines.length) {
+        layout.hidden = true;
+        empty.hidden = false;
+        return;
+      }
+
+      layout.hidden = false;
+      empty.hidden = true;
+
+      document.getElementById('cart-lines').innerHTML = lines.map(l => `
+        <div class="cart-line">
+          <a href="/product/${PM.esc(l.p.slug)}"><img src="${PM.esc(l.p.image)}" alt="${PM.esc(l.p.alt || l.p.name)}"></a>
+          <div>
+            <a class="cart-line__name" href="/product/${PM.esc(l.p.slug)}">${PM.esc(l.p.name)}</a>
+            <p class="cart-line__meta">${PM.money(l.p.price)}${l.p.soldOut ? ' · <strong>sold out — please remove</strong>' : ''}</p>
+            <div class="qty-stepper" style="margin-top:0.4rem;">
+              <button type="button" data-dec="${l.id}" aria-label="Decrease">−</button>
+              <span class="qty-val">${l.qty}</span>
+              <button type="button" data-inc="${l.id}" aria-label="Increase">+</button>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <p style="font-weight:500;margin:0 0 0.5rem;">${PM.money(l.p.price * l.qty)}</p>
+            <button class="remove" data-remove="${l.id}">Remove</button>
+          </div>
+        </div>`).join('');
+
+      // Totals reflect only orderable (in-stock) items, matching what checkout will charge.
+      const payable = lines.filter(l => !l.p.soldOut);
+      const subtotal = payable.reduce((s, l) => s + l.p.price * l.qty, 0);
+      const shipping = payable.length === 0 ? 0 : (subtotal >= ship.freeOver ? 0 : ship.flat);
+      document.getElementById('sum-subtotal').textContent = PM.money(subtotal);
+      document.getElementById('sum-shipping').textContent = shipping === 0 ? 'Free' : PM.money(shipping);
+      document.getElementById('sum-total').textContent = PM.money(subtotal + shipping);
+
+      const hasSoldOut = lines.some(l => l.p.soldOut);
+      const note = document.getElementById('free-ship-note');
+      const checkoutBtn = document.querySelector('.summary-card .btn');
+      if (payable.length === 0) {
+        note.textContent = 'Every item in your cart is sold out. Please remove them to continue.';
+        checkoutBtn.setAttribute('disabled', '');
+        checkoutBtn.style.pointerEvents = 'none';
+      } else {
+        checkoutBtn.removeAttribute('disabled');
+        checkoutBtn.style.pointerEvents = '';
+        note.textContent = [
+          hasSoldOut ? 'Sold-out items are excluded from the total and will not be ordered.' : '',
+          shipping === 0 ? 'You have free delivery.' : `Free delivery on orders of ${PM.money(ship.freeOver)} or more.`,
+        ].filter(Boolean).join(' ');
+      }
+
+      document.querySelectorAll('[data-dec]').forEach(b => b.onclick = () => {
+        const id = Number(b.dataset.dec);
+        const line = PM.cart.read().find(i => i.id === id);
+        PM.cart.setQty(id, (line?.qty || 1) - 1);
+        render();
+      });
+      document.querySelectorAll('[data-inc]').forEach(b => b.onclick = () => {
+        const id = Number(b.dataset.inc);
+        const line = PM.cart.read().find(i => i.id === id);
+        PM.cart.setQty(id, (line?.qty || 0) + 1);
+        render();
+      });
+      document.querySelectorAll('[data-remove]').forEach(b => b.onclick = () => {
+        PM.cart.remove(Number(b.dataset.remove));
+        render();
+      });
+    }
+    document.addEventListener('DOMContentLoaded', () => { render().catch(console.error); });
+  </script>
+</body>
+</html>

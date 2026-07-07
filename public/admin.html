@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Plantmood</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900&family=Hanken+Grotesk:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+  <style>
+    .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 2.5rem var(--pad-x) 5rem; }
+    .admin-tabs { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1.6rem 0 2rem; }
+    .admin-tabs button {
+      font: inherit; cursor: pointer; border: 1px solid var(--line); background: none;
+      color: inherit; border-radius: 999px; padding: 0.5rem 1.2rem;
+    }
+    .admin-tabs button.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    table.admin { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+    table.admin th, table.admin td { text-align: left; padding: 0.6rem 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+    table.admin th { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.7; }
+    table.admin img { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; }
+    .row-actions button {
+      font-size: 0.85rem; cursor: pointer; background: none; border: 1px solid var(--line);
+      border-radius: 999px; padding: 0.25rem 0.75rem; color: inherit; margin-right: 0.3rem;
+    }
+    .row-actions button:hover { border-color: var(--ink); }
+    .drawer {
+      border: 1px solid var(--line); border-radius: 12px; padding: 1.6rem; margin: 1.4rem 0;
+      background: hsla(var(--black-hsl), 0.02);
+    }
+    .badge { display: inline-block; border-radius: 999px; padding: 0.15rem 0.7rem; font-size: 0.82rem; font-weight: 500; }
+    .badge.pending { background: #f6e3c5; }
+    .badge.paid { background: #d6e4c9; }
+    .badge.shipped { background: #cfe0ea; }
+    .badge.completed { background: #dcd7ee; }
+    .badge.cancelled { background: #ecd3cc; }
+    .login-box { max-width: 380px; margin: 12vh auto; }
+    .stat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .stat { border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.4rem; min-width: 150px; }
+    .stat .n { font-size: 1.7rem; font-weight: 600; font-family: var(--heading-font); font-stretch: 125%; }
+    .stat .l { font-size: 0.85rem; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <div class="admin-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+      <h1 style="margin:0;">Plantmood Admin</h1>
+      <div>
+        <a href="/" style="font-size:0.9rem;margin-right:1rem;">← Back to site</a>
+        <button class="btn btn--small" id="logout-btn" hidden>Log out</button>
+      </div>
+    </div>
+
+    <!-- login -->
+    <div class="login-box drawer" id="login-view" hidden>
+      <h3>Log in</h3>
+      <form id="login-form">
+        <label class="field"><span>Admin password</span><input type="password" name="password" required autofocus></label>
+        <p class="form-msg error" id="login-msg"></p>
+        <button class="btn btn--solid" type="submit" style="margin-top:1rem;width:100%;">Log in</button>
+      </form>
+    </div>
+
+    <!-- app -->
+    <div id="app-view" hidden>
+      <div class="admin-tabs">
+        <button data-tab="products" class="active">Products</button>
+        <button data-tab="orders">Orders</button>
+        <button data-tab="subscribers">Subscribers</button>
+        <button data-tab="messages">Messages</button>
+        <button data-tab="settings">Settings</button>
+      </div>
+      <div id="tab-mount"></div>
+    </div>
+  </div>
+
+  <script src="/js/site.js"></script>
+  <script>
+    const T = () => localStorage.getItem('pm_admin_token');
+    const authed = (path, opts = {}) => PM.api(path, { ...opts, headers: { 'x-admin-token': T(), ...(opts.headers || {}) } });
+
+    const loginView = document.getElementById('login-view');
+    const appView = document.getElementById('app-view');
+    const logoutBtn = document.getElementById('logout-btn');
+    const mount = document.getElementById('tab-mount');
+    let CATS = [];
+
+    function showLogin() {
+      localStorage.removeItem('pm_admin_token');
+      loginView.hidden = false;
+      appView.hidden = true;
+      logoutBtn.hidden = true;
+    }
+
+    async function showApp() {
+      loginView.hidden = true;
+      appView.hidden = false;
+      logoutBtn.hidden = false;
+      CATS = await PM.api('/api/categories');
+      renderTab('products');
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const { token } = await PM.api('/api/admin/login', { method: 'POST', body: { password: e.target.password.value } });
+        localStorage.setItem('pm_admin_token', token);
+        await showApp();
+      } catch (err) {
+        document.getElementById('login-msg').textContent = err.message;
+      }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+      try { await authed('/api/admin/logout', { method: 'POST', body: {} }); } catch {}
+      showLogin();
+    });
+
+    document.querySelectorAll('.admin-tabs button').forEach(b => {
+      b.onclick = () => {
+        document.querySelectorAll('.admin-tabs button').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        renderTab(b.dataset.tab);
+      };
+    });
+
+    async function renderTab(tab) {
+      mount.innerHTML = '<p class="muted">Loading…</p>';
+      try {
+        if (tab === 'products') await renderProducts();
+        if (tab === 'orders') await renderOrders();
+        if (tab === 'subscribers') await renderSubscribers();
+        if (tab === 'messages') await renderMessages();
+        if (tab === 'settings') await renderSettings();
+      } catch (err) {
+        if (String(err.message).includes('authorised')) return showLogin();
+        mount.innerHTML = `<p class="form-msg error">${PM.esc(err.message)}</p>`;
+      }
+    }
+
+    /* ---------- products ---------- */
+    function productForm(p = {}) {
+      const catOpts = CATS.map(c =>
+        `<option value="${PM.esc(c.slug)}" ${p.category === c.slug ? 'selected' : ''}>${PM.esc(c.name)}</option>`).join('');
+      return `
+        <form class="drawer" data-id="${p.id || ''}">
+          <h4 style="margin-top:0;">${p.id ? 'Edit — ' + PM.esc(p.name) : 'New product'}</h4>
+          <div class="form-grid">
+            <label class="field"><span>Name *</span><input name="name" type="text" value="${PM.esc(p.name || '')}" required></label>
+            <label class="field"><span>Species</span><input name="species" type="text" value="${PM.esc(p.species || '')}"></label>
+            <label class="field"><span>Price (RM) *</span><input name="price" type="number" step="0.01" min="0" value="${p.price ?? ''}" required></label>
+            <label class="field"><span>Stock *</span><input name="stock" type="number" min="0" value="${p.stock ?? 5}" required></label>
+            <label class="field"><span>Category *</span><select name="category">${catOpts}</select></label>
+            <label class="field"><span>Image path *</span><input name="image" type="text" value="${PM.esc(p.image || '/images/')}" required></label>
+            <label class="field full"><span>Description</span><textarea name="description">${PM.esc(p.description || '')}</textarea></label>
+            <label class="field full"><span>Care hint</span><input name="care" type="text" value="${PM.esc(p.care || '')}"></label>
+            <label class="field full"><span>Alt text</span><input name="alt" type="text" value="${PM.esc(p.alt || '')}"></label>
+            <label class="field"><span><input name="featured" type="checkbox" ${p.featured ? 'checked' : ''} style="width:auto;margin-right:0.5rem;">Featured on homepage</span></label>
+          </div>
+          <p class="form-msg error"></p>
+          <button class="btn btn--solid btn--small" type="submit" style="margin-top:0.8rem;">${p.id ? 'Save changes' : 'Create product'}</button>
+          <button class="btn btn--small" type="button" data-cancel style="margin-left:0.5rem;">Cancel</button>
+        </form>`;
+    }
+
+    async function renderProducts() {
+      const products = await authed('/api/admin/products');
+      mount.innerHTML = `
+        <div class="stat-row">
+          <div class="stat"><div class="n">${products.length}</div><div class="l">products</div></div>
+          <div class="stat"><div class="n">${products.filter(p => p.stock <= 0).length}</div><div class="l">sold out</div></div>
+          <div class="stat"><div class="n">${products.filter(p => p.featured).length}</div><div class="l">featured</div></div>
+        </div>
+        <button class="btn btn--small" id="new-product-btn">+ New product</button>
+        <div id="form-slot"></div>
+        <table class="admin" style="margin-top:1.4rem;">
+          <thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Featured</th><th></th></tr></thead>
+          <tbody>
+            ${products.map(p => `
+              <tr>
+                <td><img src="${PM.esc(p.image)}" alt=""></td>
+                <td><a href="/product/${PM.esc(p.slug)}" target="_blank">${PM.esc(p.name)}</a></td>
+                <td>${PM.esc(p.category_name)}</td>
+                <td>${PM.money(p.price)}</td>
+                <td>${p.stock <= 0 ? '<strong style="color:var(--terracotta);">0</strong>' : p.stock}</td>
+                <td>${p.featured ? '★' : ''}</td>
+                <td class="row-actions">
+                  <button data-edit="${p.id}">Edit</button>
+                  <button data-del="${p.id}">Delete</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+
+      const slot = document.getElementById('form-slot');
+
+      function wireForm(formEl) {
+        formEl.querySelector('[data-cancel]').onclick = () => { slot.innerHTML = ''; };
+        formEl.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const id = formEl.dataset.id;
+          const fd = new FormData(formEl);
+          const body = Object.fromEntries(fd.entries());
+          body.featured = formEl.querySelector('[name="featured"]').checked;
+          try {
+            if (id) await authed('/api/admin/products/' + id, { method: 'PUT', body });
+            else await authed('/api/admin/products', { method: 'POST', body });
+            PM.toast('Saved');
+            renderProducts();
+          } catch (err) {
+            formEl.querySelector('.form-msg').textContent = err.message;
+          }
+        });
+      }
+
+      document.getElementById('new-product-btn').onclick = () => {
+        slot.innerHTML = productForm();
+        wireForm(slot.querySelector('form'));
+        slot.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      mount.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
+        const p = products.find(x => x.id === Number(b.dataset.edit));
+        slot.innerHTML = productForm(p);
+        wireForm(slot.querySelector('form'));
+        slot.scrollIntoView({ behavior: 'smooth' });
+      });
+
+      mount.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+        const p = products.find(x => x.id === Number(b.dataset.del));
+        if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+        await authed('/api/admin/products/' + p.id, { method: 'DELETE' });
+        PM.toast('Deleted');
+        renderProducts();
+      });
+    }
+
+    /* ---------- orders ---------- */
+    async function renderOrders() {
+      const orders = await authed('/api/admin/orders');
+      const statuses = ['pending', 'paid', 'shipped', 'completed', 'cancelled'];
+      mount.innerHTML = `
+        <div class="stat-row">
+          <div class="stat"><div class="n">${orders.length}</div><div class="l">orders</div></div>
+          <div class="stat"><div class="n">${orders.filter(o => o.status === 'pending').length}</div><div class="l">pending</div></div>
+          <div class="stat"><div class="n">${PM.money(orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0))}</div><div class="l">total value</div></div>
+        </div>
+        ${orders.length === 0 ? '<p class="muted">No orders yet.</p>' : `
+        <table class="admin">
+          <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Placed</th></tr></thead>
+          <tbody>
+            ${orders.map(o => `
+              <tr>
+                <td><strong>${PM.esc(o.order_no)}</strong></td>
+                <td>${PM.esc(o.name)}<br><span class="muted" style="font-size:0.85rem;">${PM.esc(o.email)}${o.phone ? ' · ' + PM.esc(o.phone) : ''}</span><br>
+                  <span class="muted" style="font-size:0.85rem;">${PM.esc(o.address1)}${o.address2 ? ', ' + PM.esc(o.address2) : ''}, ${PM.esc(o.postcode)} ${PM.esc(o.city)}, ${PM.esc(o.state)}</span>
+                  ${o.notes ? `<br><em style="font-size:0.85rem;">"${PM.esc(o.notes)}"</em>` : ''}</td>
+                <td>${o.items.map(i => `${PM.esc(i.name)} × ${i.qty}`).join('<br>')}</td>
+                <td>${PM.money(o.total)}</td>
+                <td>
+                  <span class="badge ${PM.esc(o.status)}">${PM.esc(o.status)}</span><br>
+                  <select data-order="${o.id}" style="margin-top:0.4rem;font-size:0.85rem;padding:0.3rem 0.5rem;">
+                    ${statuses.map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+                  </select>
+                </td>
+                <td style="white-space:nowrap;">${PM.esc(o.created_at)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`}`;
+
+      mount.querySelectorAll('[data-order]').forEach(sel => sel.onchange = async () => {
+        try {
+          await authed('/api/admin/orders/' + sel.dataset.order, { method: 'PUT', body: { status: sel.value } });
+          PM.toast('Status updated');
+          renderOrders();
+        } catch (err) {
+          if (String(err.message).includes('authorised')) return showLogin();
+          PM.toast('Could not update: ' + err.message);
+          renderOrders();
+        }
+      });
+    }
+
+    /* ---------- subscribers ---------- */
+    async function renderSubscribers() {
+      const subs = await authed('/api/admin/subscribers');
+      mount.innerHTML = subs.length === 0 ? '<p class="muted">No subscribers yet.</p>' : `
+        <p class="muted">${subs.length} subscriber${subs.length === 1 ? '' : 's'}</p>
+        <table class="admin">
+          <thead><tr><th>Email</th><th>Signed up</th></tr></thead>
+          <tbody>${subs.map(s => `<tr><td>${PM.esc(s.email)}</td><td>${PM.esc(s.created_at)}</td></tr>`).join('')}</tbody>
+        </table>`;
+    }
+
+    /* ---------- messages ---------- */
+    async function renderMessages() {
+      const msgs = await authed('/api/admin/messages');
+      mount.innerHTML = msgs.length === 0 ? '<p class="muted">No messages yet.</p>' : `
+        <table class="admin">
+          <thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th></tr></thead>
+          <tbody>${msgs.map(m => `
+            <tr>
+              <td>${PM.esc(m.name)}<br><a href="mailto:${PM.esc(m.email)}" style="font-size:0.85rem;">${PM.esc(m.email)}</a></td>
+              <td>${PM.esc(m.subject || '—')}</td>
+              <td style="max-width:420px;">${PM.esc(m.message)}</td>
+              <td style="white-space:nowrap;">${PM.esc(m.created_at)}</td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+    }
+
+    /* ---------- settings ---------- */
+    async function renderSettings() {
+      const s = await authed('/api/admin/settings');
+      mount.innerHTML = `
+        <form class="drawer" id="ship-form" style="max-width:480px;">
+          <h4 style="margin-top:0;">Delivery</h4>
+          <label class="field"><span>Flat delivery fee (RM)</span><input name="shipping_flat" type="number" step="0.01" min="0" value="${PM.esc(s.shipping_flat)}"></label>
+          <div class="spacer-s"></div>
+          <label class="field"><span>Free delivery over (RM)</span><input name="free_shipping_over" type="number" step="0.01" min="0" value="${PM.esc(s.free_shipping_over)}"></label>
+          <div class="spacer-s"></div>
+          <label class="field"><span>WhatsApp number (orders are sent here)</span><input name="whatsapp_number" type="text" inputmode="numeric" placeholder="60123456789" value="${PM.esc(s.whatsapp_number)}"></label>
+          <p class="muted" style="font-size:0.82rem;margin:0.4rem 0 0;">International format, digits only — country code + number, no “+” or spaces. e.g. 60123456789</p>
+          <button class="btn btn--solid btn--small" type="submit" style="margin-top:1.2rem;">Save</button>
+        </form>
+        <form class="drawer" id="pw-form" style="max-width:480px;">
+          <h4 style="margin-top:0;">Change admin password</h4>
+          <label class="field"><span>New password (min 8 characters)</span><input name="password" type="password" minlength="8" required></label>
+          <p class="form-msg error"></p>
+          <button class="btn btn--small" type="submit" style="margin-top:1.2rem;">Update password</button>
+        </form>`;
+
+      document.getElementById('ship-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await authed('/api/admin/settings', { method: 'PUT', body: Object.fromEntries(new FormData(e.target).entries()) });
+        PM.toast('Settings saved');
+      });
+
+      document.getElementById('pw-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          await authed('/api/admin/password', { method: 'POST', body: { password: e.target.password.value } });
+          PM.toast('Password updated');
+          e.target.reset();
+        } catch (err) {
+          e.target.querySelector('.form-msg').textContent = err.message;
+        }
+      });
+    }
+
+    /* ---------- boot ---------- */
+    (async () => {
+      if (!T()) return showLogin();
+      try {
+        await authed('/api/admin/settings');
+        await showApp();
+      } catch {
+        showLogin();
+      }
+    })();
+  </script>
+</body>
+</html>

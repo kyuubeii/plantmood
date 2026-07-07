@@ -1,0 +1,18 @@
+{
+  "name": "plantmood",
+  "version": "1.0.0",
+  "description": "Plantmood — Malaysian houseplant studio. Frontend + backend.",
+  "private": true,
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "seed": "node server/seed.js"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

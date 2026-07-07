@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Plantmood</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900&family=Hanken+Grotesk:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="section__inner">
+      <div class="cart-layout">
+        <div>
+          <h1>Contact us</h1>
+          <p class="muted" style="max-width:520px;">Questions about a plant, an order, or a custom arrangement for your space or event — write to us and we will get back to you within a working day.</p>
+          <form id="contact-form" novalidate style="margin-top:2rem;max-width:620px;">
+            <div class="form-grid">
+              <label class="field"><span>Name *</span><input type="text" name="name" required></label>
+              <label class="field"><span>Email *</span><input type="email" name="email" required></label>
+              <label class="field full"><span>Subject</span><input type="text" name="subject"></label>
+              <label class="field full"><span>Message *</span><textarea name="message" required></textarea></label>
+            </div>
+            <p class="form-msg" id="contact-msg"></p>
+            <button class="btn btn--solid" type="submit" style="margin-top:0.6rem;">Send Message</button>
+          </form>
+        </div>
+        <aside>
+          <img src="/images/event/event-02.jpg" alt="Plantmood tray of assorted mini succulents" style="margin-bottom:1.6rem;">
+          <h3>Plantmood Studio</h3>
+          <p class="muted">Kuala Lumpur, Malaysia<br>
+          <a href="mailto:hello@plantmood.my">hello@plantmood.my</a><br>
+          <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener">@plantmood.my</a></p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script src="/js/site.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('contact-form');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('contact-msg');
+        try {
+          await PM.api('/api/contact', {
+            method: 'POST',
+            body: Object.fromEntries(new FormData(form).entries()),
+          });
+          msg.textContent = 'Thank you! Your message is on its way.';
+          msg.className = 'form-msg ok';
+          form.reset();
+        } catch (err) {
+          msg.textContent = err.message;
+          msg.className = 'form-msg error';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

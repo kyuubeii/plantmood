@@ -1,0 +1,647 @@
+[
+ {
+  "slug": "bonsai",
+  "label": "Bonsai Series",
+  "products": [
+   {
+    "image": "bonsai-01.jpg",
+    "name": "Lucky Bamboo — Glass Hydro Jar (Soil-Free)",
+    "species": "Dracaena sanderiana (lucky bamboo)",
+    "description": "A single sturdy cane of lucky bamboo crowned with glossy whorls of green, settled into a clear hydro jar with white pebbles and a bamboo collar. Grown entirely in water, so you can watch the golden roots do their quiet work. A small, steady presence for a desk or shelf, and a classic token of good fortune.",
+    "care": "Keep in bright, indirect light and top up with clean water weekly, keeping the roots submerged.",
+    "price_myr": 98,
+    "alt": "Lucky bamboo cane with lush green leaves growing soil-free in a clear glass jar with wooden lid collar and white pebbles, on a white background",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "bonsai-02.jpg",
+    "name": "Monstera Adansonii — Glass Hydro Jar (Soil-Free)",
+    "species": "Monstera adansonii (Swiss cheese vine)",
+    "description": "Our favourite window-maker: a full cluster of Monstera adansonii, each leaf perforated like paper cutwork. It grows soil-free in a clear vase with a warm wooden collar, roots trailing visibly in the water below. Generous foliage from day one, with no repotting and no mess.",
+    "care": "Give it bright, indirect light and refresh the water every week or so.",
+    "price_myr": 135,
+    "alt": "Monstera adansonii with perforated leaves growing soil-free in a glass hydroponic vase with wooden lid, placed left of frame against a white background",
+    "banner_quality": "high"
+   },
+   {
+    "image": "bonsai-03.jpg",
+    "name": "Anthurium Red — Glass Hydro Jar (Soil-Free)",
+    "species": "Anthurium andraeanum (flamingo flower)",
+    "description": "A young anthurium held in clear water, its red spathe leaning into the light like it knows it is the main event. The glass jar and wooden lid keep everything tidy while the pale roots weave their own quiet sculpture below the waterline. Blooms linger for weeks, and new ones follow.",
+    "care": "Place in bright, indirect light and change the water weekly, keeping roots fully submerged.",
+    "price_myr": 148,
+    "alt": "Red anthurium with heart-shaped leaves and one open bloom growing soil-free in a glass jar with wooden lid, roots visible in water, warm sunlight casting soft shadows",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "bonsai-04.jpg",
+    "name": "Alocasia Zen Garden — Bonsai Tray (Gift Series)",
+    "species": "Alocasia cucullata (Buddha's hand alocasia)",
+    "description": "A miniature landscape in a dark rectangular bonsai tray: an Alocasia cucullata rising from its knotted corm over moss, white gravel, river stones, and a small ceramic sage keeping watch. Arranged by hand and ready to give, no wrapping required. The kind of gift that gets a permanent spot on the recipient's table.",
+    "care": "Keep in bright, indirect light and water lightly when the moss begins to dry.",
+    "price_myr": 188,
+    "alt": "Alocasia cucullata planted in a dark rectangular bonsai tray zen-garden arrangement with white gravel, moss, stones, and a small ceramic sage figurine, on a plain grey background",
+    "banner_quality": "medium"
+   }
+  ]
+ },
+ {
+  "slug": "hydroponic",
+  "label": "Hydroponic Series",
+  "products": [
+   {
+    "image": "hydroponic-01.jpg",
+    "name": "White Anthurium — Soil-Free Glass Jar",
+    "species": "Anthurium andraeanum (Flamingo Flower)",
+    "description": "A blooming anthurium raised entirely in water, its roots on quiet display inside a tapered glass jar with a wooden collar and base. The creamy white spathes open slowly and stay for weeks, so there is always something unfolding on your desk. No soil, no mess — just glass, wood, and green.",
+    "care": "Bright indirect light; refresh the water weekly and keep roots about two-thirds submerged.",
+    "price_myr": 59,
+    "banner_quality": "high",
+    "alt": "White-flowering anthurium growing soil-free in a clear glass jar with wooden lid collar and wood base, roots visible, against a white background"
+   },
+   {
+    "image": "hydroponic-02.jpg",
+    "name": "Water Pennywort — Round Glass Bowl",
+    "species": "Hydrocotyle vulgaris (Water Pennywort)",
+    "description": "A cheerful crowd of coin-round leaves growing straight from water in a rounded glass bowl. Pennywort grows fast and forgives much, sending up new stems almost weekly once it settles in. Watching the roots drift below the waterline is half the charm.",
+    "care": "Give it your brightest windowsill and never let the water run low — this one drinks quickly.",
+    "price_myr": 35,
+    "banner_quality": "medium",
+    "alt": "Water pennywort with round coin-shaped leaves growing hydroponically in a clear round glass bowl on a white table"
+   },
+   {
+    "image": "hydroponic-03.jpg",
+    "name": "Golden Pothos — White Pebble Bowl",
+    "species": "Epipremnum aureum (Golden Pothos)",
+    "description": "Glossy, gold-flecked pothos leaves anchored in a bed of white pebbles inside a scalloped glass bowl, finished with a solid wood base. The stones keep the stems upright while the roots wander visibly beneath. An easy, tidy way to keep green on a shelf that never sees a watering can spill.",
+    "care": "Thrives in medium to bright indirect light; top up with clean water every few days and rinse the pebbles monthly.",
+    "price_myr": 45,
+    "banner_quality": "medium",
+    "alt": "Golden pothos growing in a glass bowl filled with white pebbles on a round wooden base, photographed on white"
+   },
+   {
+    "image": "hydroponic-04.jpg",
+    "name": "Golden Pothos Mini — Hydro Jar",
+    "species": "Epipremnum aureum (Golden Pothos)",
+    "description": "A small pothos settled into a clear jar with a wooden collar, its pale roots weaving patterns you can watch through the glass. Compact enough for a bedside table or the corner of a work desk. It asks for very little and keeps growing anyway.",
+    "care": "Happy in medium indirect light; swap in fresh water once a week to keep roots healthy.",
+    "price_myr": 28,
+    "banner_quality": "medium",
+    "alt": "Small golden pothos growing soil-free in a clear glass jar with a wooden rim, white roots visible in water, on a white background"
+   }
+  ]
+ },
+ {
+  "slug": "soilfree",
+  "label": "Soil-free Series",
+  "products": [
+   {
+    "image": "soilfree-01.jpg",
+    "name": "Green Island Ficus — Stone Garden Bowl",
+    "species": "Ficus microcarpa (Green Island Ficus)",
+    "description": "A little ficus canopy rising from a quiet landscape of moss, white pebbles and a single standing stone. Grown in a clean soil-free medium and settled into a matte grey ceramic bowl, it reads like a garden distilled to its essentials. Happy on a desk, a shelf, or anywhere it can be looked at slowly.",
+    "care": "Bright indirect light; water lightly when the top of the medium feels dry.",
+    "price_myr": 79,
+    "banner_quality": "high",
+    "alt": "Small Ficus microcarpa tree with moss, white gravel and a grey stone in a round matte grey ceramic bowl on a white background"
+   },
+   {
+    "image": "soilfree-02.jpg",
+    "name": "Buddhist Pine — Panda Grove",
+    "species": "Podocarpus macrophyllus (Buddhist Pine)",
+    "description": "A young Buddhist pine stretches tall over a mossy floor while a small panda snacks in its shade. The ribbed sandstone-toned pot and soil-free base keep everything tidy indoors, so all the character stays up top. Equal parts calm and cheeky — a favourite for desks that need company.",
+    "care": "Bright light with some gentle morning sun; keep the medium lightly moist, never soggy.",
+    "price_myr": 75,
+    "banner_quality": "medium",
+    "alt": "Podocarpus macrophyllus in a ribbed beige pot with moss, pebbles, a rock and a miniature panda figurine, on a white background"
+   },
+   {
+    "image": "soilfree-03.jpg",
+    "name": "S-Curve Ficus — White Facet Pot",
+    "species": "Ficus microcarpa (S-shaped bonsai form)",
+    "description": "A sculptural ficus trained into a slow S-curve, each bend carrying its own cloud of glossy leaves. It sits in a faceted white ceramic pot with a natural coco-fibre top — soil-free, clean-handed, and ready to live indoors. The kind of plant that quietly becomes the main character of a room.",
+    "care": "Bright indirect light; water when the top layer of the medium is dry to the touch.",
+    "price_myr": 80,
+    "banner_quality": "medium",
+    "alt": "S-shaped Ficus microcarpa bonsai with layered leaf pads in a white geometric faceted pot topped with coco fibre, on a white background"
+   },
+   {
+    "image": "soilfree-04.jpg",
+    "name": "Windswept Podocarpus — Jizo Zen Bowl",
+    "species": "Podocarpus macrophyllus (Buddhist Pine)",
+    "description": "This Buddhist pine leans and reaches like it grew on a hillside, tended by a small smiling monk and a stone lantern below. Moss, dark pebbles and a tuft of grass complete the scene inside a fluted, fan-shaped ceramic bowl. Soil-free underneath, so the whole landscape stays neat on a tabletop.",
+    "care": "Bright light; water in small amounts to keep the medium just moist, and mist the moss occasionally.",
+    "price_myr": 78,
+    "banner_quality": "medium",
+    "alt": "Windswept Podocarpus bonsai with a smiling jizo monk figurine, stone lantern, moss and grass in a mauve fluted ceramic bowl on a white background"
+   },
+   {
+    "image": "soilfree-05.jpg",
+    "name": "Lantern Tree — Festive Bonsai Garden",
+    "species": "Buxus (boxwood) bonsai with Sansevieria accents",
+    "description": "A broad-canopied boxwood strung with red velvet lanterns, standing over snake plants, moss and a tiny stone pagoda. It is a full miniature garden in one wide white bowl — grown soil-free and finished for gifting straight away. Made for reunion tables and doorways that could use a bit of luck.",
+    "care": "Bright indirect light; water sparingly and mist the moss to keep the underplanting fresh.",
+    "price_myr": 85,
+    "banner_quality": "medium",
+    "alt": "Boxwood bonsai decorated with red Chinese lanterns above snake plants, moss, rocks and a stone lantern in a wide white ceramic bowl, festive gift arrangement"
+   },
+   {
+    "image": "soilfree-06.jpg",
+    "name": "Spider Plant — Carved Clay Cylinder",
+    "species": "Chlorophytum comosum 'Variegatum' (Spider Plant)",
+    "description": "Striped leaves arch and spill in every direction from a purple-clay pot etched with bamboo. The soil-free medium keeps this old favourite light and tidy, while the fountain of variegated foliage does all the talking. Forgiving, fast, and very hard to dislike.",
+    "care": "Bright indirect light; water when the medium has mostly dried out.",
+    "price_myr": 48,
+    "banner_quality": "medium",
+    "alt": "Variegated spider plant with arching yellow-striped leaves in a carved terracotta-red clay cylinder pot with bamboo etching, on a white background"
+   },
+   {
+    "image": "soilfree-07.jpg",
+    "name": "Philodendron Xanadu — Black Gloss Pot",
+    "species": "Thaumatophyllum xanadu (Philodendron Xanadu)",
+    "description": "Deeply cut leaves fan out on long green stems like a slow firework. Set in a glossy black cylinder over white pebbles, the contrast is crisp and a little dramatic — no soil, no mess, just shape. Give it room to spread and it rewards you daily.",
+    "care": "Medium to bright indirect light; water when the top of the medium feels dry.",
+    "price_myr": 59,
+    "banner_quality": "medium",
+    "alt": "Philodendron Xanadu with deeply lobed leaves on long stems in a glossy black cylindrical pot topped with white pebbles, on a white background"
+   },
+   {
+    "image": "soilfree-08.jpg",
+    "name": "Golden Snake Plant — Teal Pleat Pot",
+    "species": "Sansevieria trifasciata 'Laurentii' (Snake Plant)",
+    "description": "Upright yellow-edged blades in a small pleated teal pot — a plant that asks for almost nothing and still shows up sharp. Grown soil-free, it suits bedrooms, bathrooms and busy owners alike. The easiest first step into keeping something green.",
+    "care": "Tolerates low light; water sparingly, roughly every two to three weeks.",
+    "price_myr": 35,
+    "banner_quality": "high",
+    "alt": "Small Sansevieria Laurentii snake plant with yellow-edged leaves in a ribbed teal ceramic pot, small subject with generous white negative space"
+   },
+   {
+    "image": "soilfree-09.jpg",
+    "name": "Dwarf Umbrella Tree — Sky Chevron Pot",
+    "species": "Schefflera arboricola (Dwarf Umbrella Tree)",
+    "description": "Glossy leaflets open like small umbrellas in every direction, full and rounded from day one. The pale blue chevron pot keeps it fresh and light, and the soil-free medium keeps care simple. A dependable green presence that grows with you.",
+    "care": "Bright indirect light; let the top layer of the medium dry out between waterings.",
+    "price_myr": 49,
+    "banner_quality": "medium",
+    "alt": "Bushy Schefflera arboricola with glossy umbrella-shaped leaf clusters in a light blue chevron-patterned ceramic pot on a white background"
+   },
+   {
+    "image": "soilfree-10.jpg",
+    "name": "Aglaonema Red — Blush Pedestal Pot",
+    "species": "Aglaonema 'Red Valentine' (Chinese Evergreen)",
+    "description": "Pink-flushed leaves edged in deep green, sitting snug in a matte blush pot that matches its mood. Compact, soil-free and slow to complain, it brings colour without asking for a window seat. Small enough for a bedside table, bright enough to be noticed.",
+    "care": "Bright indirect light keeps the pink vivid; water when the medium is half dry.",
+    "price_myr": 39,
+    "banner_quality": "high",
+    "alt": "Small pink and green Aglaonema Red Valentine in a matte pink two-tiered ceramic pot, small subject with generous white negative space"
+   },
+   {
+    "image": "soilfree-11.jpg",
+    "name": "Asparagus Fern — Cloud Pedestal Pot",
+    "species": "Asparagus setaceus (Asparagus Fern)",
+    "description": "Feather-soft fronds hover like green mist above a smooth, stone-coloured pedestal pot. Grown in a soil-free base, it is all texture and air — the plant equivalent of a deep breath. Lovely beside a window with gentle light.",
+    "care": "Bright indirect light and a little humidity; keep the medium lightly and evenly moist.",
+    "price_myr": 55,
+    "banner_quality": "high",
+    "alt": "Delicate feathery Asparagus setaceus fern in a smooth grey-white pedestal pot on a pale background with soft even lighting"
+   },
+   {
+    "image": "soilfree-12.jpg",
+    "name": "Aglaonema Stripes — Sand Ribbed Pot",
+    "species": "Aglaonema 'Stripes' (Chinese Evergreen)",
+    "description": "Deep green leaves traced with fine silver pinstripes, held neatly above a speckled sand-toned pot. It stays compact, tolerates ordinary indoor corners, and its soil-free base keeps shelves clean. Quiet detail you notice more the longer you live with it.",
+    "care": "Low to medium indirect light; water when the medium feels dry to the touch.",
+    "price_myr": 40,
+    "banner_quality": "medium",
+    "alt": "Young Aglaonema with dark green white-pinstriped leaves in a ribbed sand-coloured ceramic pot, small subject with generous white space"
+   }
+  ]
+ },
+ {
+  "slug": "tabletop",
+  "label": "Tabletop Potted Series",
+  "products": [
+   {
+    "image": "tabletop-01.jpg",
+    "name": "Asparagus Fern Zen Garden — Black Pebble Bowl",
+    "species": "Asparagus setaceus (asparagus fern)",
+    "description": "A miniature landscape in one quiet bowl: feathery asparagus fern rises over a bed of living moss, white gravel, and a tiny resting rabbit. The matte black pebble planter grounds it all, like a stone lifted straight from a riverbed. Set it where you pause most often — it rewards a second look.",
+    "care": "Bright, indirect light; keep the moss lightly moist and mist the fern a few times a week.",
+    "price_myr": 89,
+    "banner_quality": "medium",
+    "alt": "Feathery asparagus fern growing from a matte black pebble-shaped bowl with moss, white gravel, and a tiny rabbit figurine, on a white background"
+   },
+   {
+    "image": "tabletop-02.jpg",
+    "name": "Red Anthurium — Cream Bubble Pot",
+    "species": "Anthurium andraeanum (flamingo flower)",
+    "description": "Glossy, heart-shaped blooms in deep red sit above a tidy layer of white pebbles, potted soil-free for clean indoor keeping. The ribbed cream bubble pot keeps things soft and playful without stealing the show. Flowers hold their colour for weeks at a time.",
+    "care": "Bright, indirect light; water when the top layer feels dry, roughly once a week.",
+    "price_myr": 65,
+    "banner_quality": "medium",
+    "alt": "Red anthurium with heart-shaped flowers and dark green leaves in a cream ribbed bubble ceramic pot topped with white pebbles"
+   },
+   {
+    "image": "tabletop-03.jpg",
+    "name": "ZZ Plant — White Swirl Vase",
+    "species": "Zamioculcas zamiifolia (ZZ plant)",
+    "description": "Upright stems of deep, polished green that look freshly waxed all year round. Planted soil-free with a dark pebble top dressing in a sculptural white swirl vase, it stays neat on a desk or shelf with almost no attention. The plant most likely to forgive a forgetful fortnight.",
+    "care": "Tolerates low to bright indirect light; water sparingly, only when the medium is fully dry.",
+    "price_myr": 75,
+    "banner_quality": "medium",
+    "alt": "ZZ plant with glossy dark green leaflets in a white swirl-textured ceramic pot with black pebble topping, on a white background"
+   },
+   {
+    "image": "tabletop-04.jpg",
+    "name": "Fittonia Mix — Low White Bowl",
+    "species": "Fittonia albivenis (nerve plant), mixed varieties",
+    "description": "Three shades of nerve plant — white-veined green, blush pink, and deep rose — planted close so their patterns weave together. The low white bowl keeps the focus on those tiny stitched leaves. Small enough for a bedside table, detailed enough to keep you looking.",
+    "care": "Medium to bright indirect light; likes consistently moist soil and will droop dramatically (then recover) when thirsty.",
+    "price_myr": 48,
+    "banner_quality": "medium",
+    "alt": "Mixed green, pink, and red fittonia nerve plants with veined leaves in a low round white ceramic bowl on a white table"
+   },
+   {
+    "image": "tabletop-05.jpg",
+    "name": "Fiddle-Leaf Fig 'Bambino' — Olive Textured Pot",
+    "species": "Ficus lyrata 'Bambino' (dwarf fiddle-leaf fig)",
+    "description": "The fiddle-leaf fig at a friendlier scale: broad, deep-green leaves fanning out from a compact crown, with a pebble-dressed top for a clean finish. Its olive basket-weave pot picks up the leaf colour without competing. All the presence of the classic, none of the ceiling anxiety.",
+    "care": "Bright, indirect light near a window; water when the top few centimetres of soil dry out.",
+    "price_myr": 79,
+    "banner_quality": "medium",
+    "alt": "Compact fiddle-leaf fig with broad dark green leaves in an olive-green textured ceramic pot, viewed from a slightly high angle"
+   },
+   {
+    "image": "tabletop-06.jpg",
+    "name": "Philodendron Burle Marx — White Sculpt Pot",
+    "species": "Philodendron burle-marxii (Philodendron Burle Marx)",
+    "description": "Long, glossy, arrow-shaped leaves that arch and layer like brushstrokes, named after the Brazilian landscape artist who loved them. The stepped white pot gives the loose foliage a calm, architectural base. A fast, easy grower that fills out beautifully on a sideboard.",
+    "care": "Bright to medium indirect light; water when the top of the soil dries, and it will race along.",
+    "price_myr": 69,
+    "banner_quality": "high",
+    "alt": "Philodendron Burle Marx with glossy elongated green leaves arching from a white sculptural ceramic pot against a soft grey-white background"
+   },
+   {
+    "image": "tabletop-07.jpg",
+    "name": "Water Pennywort Cup — Soil-Free, with Wood Coaster",
+    "species": "Hydrocotyle verticillata (water pennywort / coin grass)",
+    "description": "A little crowd of round, coin-like leaves on slender stems, grown soil-free in water and pebbles inside a rounded white cup. It arrives sitting on its own live-edge wood coaster, ready for a desk or windowsill. Watch it lean toward the light and turn it now and then, like winding a clock.",
+    "care": "Loves bright light and constant water — simply keep the cup topped up above the pebbles.",
+    "price_myr": 39,
+    "banner_quality": "medium",
+    "alt": "Water pennywort with small round coin-shaped leaves growing soil-free in a white egg-shaped ceramic cup on a wooden coaster"
+   },
+   {
+    "image": "tabletop-08.jpg",
+    "name": "Sansevieria Quartet — Gift Series Set of 4",
+    "species": "Sansevieria trifasciata cultivars ('Hahnii', 'Golden Hahnii', 'Laurentii' types)",
+    "description": "Four compact snake plants in four quietly different moods — banded green, gold-edged, and buttery variegated — each in its own ribbed pastel pot with white pebble dressing. Part of our gift series: keep the set together on a shelf, or split it into four small hellos. Near-impossible to fail, which makes it a kind gift.",
+    "care": "Any light from low to bright; water only every two to three weeks, less is more.",
+    "price_myr": 95,
+    "banner_quality": "high",
+    "alt": "Gift set of four small sansevieria snake plants in pastel ribbed ceramic pots arranged in a row on a white surface"
+   }
+  ]
+ },
+ {
+  "slug": "floor",
+  "label": "Floor-size Potted Series",
+  "products": [
+   {
+    "image": "floor-01.jpg",
+    "name": "Snake Plant 'Laurentii' — Teal Ridge Pot",
+    "species": "Dracaena trifasciata 'Laurentii' (Sansevieria)",
+    "description": "A young golden-edged snake plant, its banded leaves twisting upward like slow green flames. Potted in a ridged teal ceramic that plays nicely against the yellow margins. Compact today, unbothered tomorrow — this one grows on its own schedule and asks very little of yours.",
+    "care": "Bright indirect to low light; water only when the medium is fully dry, roughly every two to three weeks.",
+    "price_myr": 128,
+    "alt": "Small variegated snake plant with yellow-edged leaves in a ribbed teal ceramic pot against a plain white background",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "floor-02.jpg",
+    "name": "Pencil Cactus — Tall White Column Pot",
+    "species": "Euphorbia tirucalli",
+    "description": "All lines, no leaves to speak of — the pencil cactus draws itself in thin green strokes that branch and cross like a quick sketch. Grown soil-free in a clean coco medium and set in a tall textured white column pot. A quiet sculpture that happens to be alive.",
+    "care": "Loves full sun to bright light; water sparingly, letting the medium dry out completely between drinks.",
+    "price_myr": 199,
+    "alt": "Pencil cactus with thin branching green stems in a tall white textured ceramic pot, coco fibre visible at the base, on a white background",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "floor-03.jpg",
+    "name": "Monstera Deliciosa — Speckled Stone Pot",
+    "species": "Monstera deliciosa",
+    "description": "Wide, split leaves that open like hands over a speckled stone-grey pot. Each fenestration lets a little light through, so the whole plant reads airy rather than heavy. Finished with a tidy coco-fibre top dressing for a clean, soil-free look indoors.",
+    "care": "Bright indirect light; water when the top few centimetres of the medium feel dry, about once a week.",
+    "price_myr": 269,
+    "alt": "Monstera deliciosa with large split leaves spreading wide from a speckled grey pot topped with coconut fibre, white studio background",
+    "banner_quality": "high"
+   },
+   {
+    "image": "floor-04.jpg",
+    "name": "Golden Pothos Pole — White Studio Pot",
+    "species": "Epipremnum aureum (golden pothos)",
+    "description": "Golden pothos trained up a coir pole, so its marbled leaves stack into a soft green column instead of trailing away. The cream-and-green variegation shifts leaf to leaf — no two panels alike. Sits neatly in a matte white pot that lets the foliage do the talking.",
+    "care": "Bright to medium indirect light; water when the top layer dries and mist the pole now and then to encourage climbing.",
+    "price_myr": 179,
+    "alt": "Golden pothos with variegated heart-shaped leaves climbing a coir moss pole in a white ceramic pot on a white background",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "floor-05.jpg",
+    "name": "Ficus Audrey — Faceted White Tall Pot",
+    "species": "Ficus benghalensis 'Audrey'",
+    "description": "The banyan fig, house-sized: rounded sage-green leaves with pale veins, branching generously in every direction. This piece already has the open, tree-like posture most figs take years to find. Planted in a tall faceted white pot that keeps the silhouette crisp.",
+    "care": "Bright indirect light near a window; water when the top third of the mix is dry and wipe leaves monthly.",
+    "price_myr": 345,
+    "alt": "Multi-branched Ficus Audrey with oval veined leaves in a tall faceted white ceramic pot against a white wall",
+    "banner_quality": "low"
+   },
+   {
+    "image": "floor-06.jpg",
+    "name": "Ficus Audrey Sapling — Curved Trunk, Ribbed Pot",
+    "species": "Ficus benghalensis 'Audrey'",
+    "description": "A young Audrey with a gently S-curved trunk and a crown of soft, matte-green leaves. The bend gives it character straight away — more small tree than houseplant. Topped with bark mulch in a ribbed cream pot for a tidy finish.",
+    "care": "Bright indirect light; water thoroughly when the top few centimetres dry out, and turn the pot occasionally to keep the curve balanced.",
+    "price_myr": 259,
+    "alt": "Young Ficus Audrey with a curved slender trunk and oval green leaves in a ribbed cream pot with bark mulch, white background",
+    "banner_quality": "low"
+   },
+   {
+    "image": "floor-07.jpg",
+    "name": "Ficus Tree — Charcoal Tall Pot",
+    "species": "Ficus benghalensis (young tree form)",
+    "description": "A tall, open-branched fig with glossy leaves held loosely along a slim trunk — closer to a small tree by a window than a plant on a shelf. The dark charcoal pot grounds the airy crown. Give it a corner with light and a little headroom.",
+    "care": "Bright indirect light; water when the top third of the soil is dry, and avoid moving it once it has settled in.",
+    "price_myr": 379,
+    "alt": "Tall young ficus tree with a slender trunk and open branches of glossy green leaves in a tall dark charcoal pot, white background",
+    "banner_quality": "low"
+   },
+   {
+    "image": "floor-08.jpg",
+    "name": "Dracaena 'Compacta' Twin Stem — White Cylinder Pot",
+    "species": "Dracaena fragrans 'Compacta'",
+    "description": "Two upright canes, each crowned with dense rosettes of deep green — like a pair of small pines that agreed to stay indoors. Its dark, glossy foliage holds its shape with almost no fuss. Potted in a simple white cylinder that suits its tidy habit.",
+    "care": "Tolerates low to medium indirect light; water lightly when the top half of the soil is dry, roughly every ten days.",
+    "price_myr": 289,
+    "alt": "Twin-stemmed Dracaena compacta with dense dark green rosettes in a white cylinder pot against a white background",
+    "banner_quality": "low"
+   },
+   {
+    "image": "floor-09.jpg",
+    "name": "Dracaena 'Song of India' — Soft White Pot",
+    "species": "Dracaena reflexa 'Song of India'",
+    "description": "Arching canes carry ribbons of green striped with soft yellow, each tip curling like the end of a phrase. It grows loose and expressive rather than upright and formal — a plant with gesture. Finished soil-free with a coco-fibre top in a soft white pot.",
+    "care": "Bright indirect light keeps the variegation vivid; water when the top layer of the medium dries out.",
+    "price_myr": 315,
+    "alt": "Dracaena Song of India with arching canes of yellow-striped green leaves in a rounded white pot topped with coconut fibre, white background",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "floor-10.jpg",
+    "name": "Snake Plant 'Laurentii' Grande — White Tumbler Pot",
+    "species": "Dracaena trifasciata 'Laurentii' (Sansevieria)",
+    "description": "A full, mature stand of golden-edged snake plant — dozens of banded blades rising in one confident cluster. The grey-green mottling against yellow margins gives it depth without needing colour anywhere else in the room. Set in a glossy white tumbler pot, ready to hold a corner on its own.",
+    "care": "Happy from low light to full sun; water deeply but rarely, only when the soil has dried right through.",
+    "price_myr": 189,
+    "alt": "Large mature variegated snake plant with many upright yellow-edged leaves in a glossy white ceramic pot on a white background",
+    "banner_quality": "medium"
+   }
+  ]
+ },
+ {
+  "slug": "airplants",
+  "label": "Air Plants",
+  "products": [
+   {
+    "image": "airplants-01.jpg",
+    "name": "Tillandsia Ionantha — Hanging Prism Stand",
+    "species": "Tillandsia ionantha",
+    "description": "A blooming ionantha rests inside a slim black-wire prism, suspended from its own tabletop stand. The violet flower spike appears once the plant matures, so this one arrives at its best moment. No soil, no pot — just a quiet piece of living geometry for a shelf or desk.",
+    "care": "Give it bright indirect light and mist two to three times a week, letting it dry fully between.",
+    "price_myr": 35,
+    "alt": "Blooming Tillandsia ionantha air plant with a purple flower spike inside a black geometric wire prism hanging from a minimalist metal stand on a white background",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "airplants-02.jpg",
+    "name": "Air Plant Duo — Glass Bowl Terrarium",
+    "species": "Tillandsia ionantha",
+    "description": "Two young ionantha sit together on a bed of river pebbles in a clear glass bowl, one already sending up its purple bloom. Everything stays visible through the glass — leaves, stones, the whole small scene. Soil-free and tidy, it suits a desk that likes to stay uncluttered.",
+    "care": "Mist lightly twice a week and keep the bowl out of direct midday sun.",
+    "price_myr": 28,
+    "alt": "Two green Tillandsia ionantha air plants, one with a purple bloom, arranged on beige pebbles inside a round glass bowl against a plain white backdrop",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "airplants-03.jpg",
+    "name": "Tillandsia Curly Slim — Olive Ceramic Orb",
+    "species": "Tillandsia 'Curly Slim' (streptophylla hybrid)",
+    "description": "Long, looping leaves spill out of a small olive ceramic orb and curl across the table like handwriting. Curly Slim is a slow-growing streptophylla hybrid, and a specimen with this much reach is uncommon. The plant lifts out easily for its bath, then settles back into the pot on its own.",
+    "care": "Soak for 20 minutes once a week, then shake off and dry upside down before returning it to the pot.",
+    "price_myr": 45,
+    "alt": "Large Tillandsia Curly Slim air plant with long curling green leaves sprawling from a small round olive-green ceramic pot on a white surface",
+    "banner_quality": "high"
+   },
+   {
+    "image": "airplants-04.jpg",
+    "name": "Mini Bowl Terrarium Pair — Rubra & Green Tillandsia",
+    "species": "Tillandsia ionantha (red and green forms)",
+    "description": "A matched pair of glass bowls, each with its own mood: a red-flushed ionantha in bloom over white pebbles, and a cluster of green rosettes over warm natural stone. They read as a set but live happily apart. Soil-free and low-fuss, made for bedside tables and bookshelf gaps.",
+    "care": "Mist two to three times a week and let the plants dry completely inside the open bowls.",
+    "price_myr": 40,
+    "alt": "Two round glass bowl terrariums viewed from above, one holding a red blushing Tillandsia ionantha on white pebbles and the other green air plants on natural pebbles",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "airplants-05.jpg",
+    "name": "Gift Series: Stone Cairn Vase with Air Plant",
+    "species": "Tillandsia ionantha",
+    "description": "A ceramic vase shaped like stacked river stones holds a single ionantha, with a tiny rabbit figurine keeping watch at its base. Part of our gift series, it arrives arranged and ready to hand over — no wrapping required. Choose the green rosette or the red-tipped one; both sit steady on a desk or windowsill.",
+    "care": "Mist the plant two to three times weekly and keep it in bright, airy shade.",
+    "price_myr": 39,
+    "alt": "Two stacked-stone ceramic vases each holding a Tillandsia air plant, one green and one red-tipped, with small white rabbit figurines perched on the rims",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "airplants-06.jpg",
+    "name": "Gift Series: Bloom Pods — Crackle Ceramic Pair",
+    "species": "Tillandsia ionantha 'Rubra' (in bloom)",
+    "description": "Two crackle-glazed ceramic pods, one milk-white and one moss-green, each cradling a blushing ionantha in full purple bloom. The red flush and flower are the plant's own celebration, timed for gifting. From our gift series — sold as a pair, ready to split between two desks or two people.",
+    "care": "Mist two to three times a week and remove the plant to dry after heavier watering so the pod stays fresh.",
+    "price_myr": 38,
+    "alt": "Two round crackle-glaze ceramic pots, one white and one green, each holding a red-blushed Tillandsia ionantha air plant with a purple flower spike",
+    "banner_quality": "high"
+   }
+  ]
+ },
+ {
+  "slug": "gifts",
+  "label": "Gift Series",
+  "products": [
+   {
+    "image": "gifts-01.jpg",
+    "name": "Red Aglaonema Gift Sleeve — Kraft Edition",
+    "species": "Aglaonema 'Siam Aurora' (Red Chinese Evergreen)",
+    "description": "A small red aglaonema, its leaves flushed crimson with green edges, tucked into a mint ceramic pot. It arrives inside our kraft paper carrier, tied off with a white ribbon and ready to hand over as-is. A quietly confident gift for someone starting something new.",
+    "care": "Keep in bright, indirect light and water when the top layer of the mix feels dry.",
+    "price_myr": 59,
+    "alt": "Red aglaonema in a mint ceramic pot beside a kraft paper gift sleeve printed with the word Beautiful, tied with white ribbon, on a white background",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "gifts-02.jpg",
+    "name": "Pink Aglaonema Gift Sleeve — Meadow Edition",
+    "species": "Aglaonema (pink cultivar, Chinese Evergreen)",
+    "description": "Soft pink leaves rimmed in deep green, planted in a faceted olive ceramic pot that catches the light from every angle. The set comes wrapped in our meadow-print paper sleeve with a slim white bow. Made for the friend who likes their colour gentle, not loud.",
+    "care": "Bright, indirect light keeps the pink vivid; water once the top of the mix dries out.",
+    "price_myr": 65,
+    "alt": "Pink aglaonema in a green faceted ceramic pot next to a sage-green painted paper gift sleeve tied with white ribbon, on a white background",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "gifts-03.jpg",
+    "name": "Echeveria Lantern Carrier — Kraft or White",
+    "species": "Echeveria sp.",
+    "description": "A single plump echeveria rosette in a stone-grey ceramic pot, framed by a windowed paper lantern carrier in your choice of kraft or white. The tissue wrap and ribbon come done for you, so it goes straight from our hands to theirs. Small, sturdy, and very hard to get wrong.",
+    "care": "Give it the sunniest spot you have and water sparingly, only when the soil is fully dry.",
+    "price_myr": 48,
+    "alt": "Two echeveria succulents in grey ceramic pots displayed inside kraft and white paper lantern-style gift carriers with cut-out windows and ribbon bows",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "gifts-04.jpg",
+    "name": "Prosperity Duo — Money Tree Bowl & Pennywort Jar",
+    "species": "Pachira aquatica (Money Tree) with Fittonia; Hydrocotyle (pennywort) companion",
+    "description": "A curved money tree grove underplanted with fittonia in a cream ceramic bowl, joined by a little jar of coin-round pennywort in a blessing pot. Both arrive boxed with red satin ribbon and a fu character seal, ready for openings, reunions, and good beginnings. One gift, two kinds of luck.",
+    "care": "Bright, indirect light for both; water when the top half of the mix is dry, keeping the pennywort a little moister.",
+    "price_myr": 158,
+    "alt": "Gift set of a braided money tree in a cream ceramic bowl inside a floral box with red ribbon, beside a small pennywort plant in a white pot on a box with a Chinese fu character",
+    "banner_quality": "medium"
+   },
+   {
+    "image": "gifts-05.jpg",
+    "name": "Mini Plant Wedding Favours — Clear Dome Set",
+    "species": "Assorted minis (jade plant, sansevieria and similar)",
+    "description": "Rows of palm-sized plants in ribbed white ceramic pots, each sealed in a clear favour dome with a printed monogram and ribbon. We customise the names and print for your day, then deliver them arranged and ready for the table. A favour guests actually take home and keep alive.",
+    "care": "Bright light and a small pour of water every week or two is all these minis ask.",
+    "price_myr": 40,
+    "alt": "Sideways-rotated event photo of rows of personalised wedding favour plants in clear monogrammed cylinders on a tulle-covered table outdoors; shows custom branding rather than a single product",
+    "banner_quality": "low"
+   },
+   {
+    "image": "gifts-06.jpg",
+    "name": "Jade Mini Favour — Personalised Keepsake Pot",
+    "species": "Crassula ovata (Jade Plant)",
+    "description": "A young jade plant in a ribbed white ceramic pot, capped with a clear dome printed with the couple's names. Jade is the classic token of growing fortune, which makes it an easy thing to hand to a hundred guests. Sold per piece as part of our custom favour runs.",
+    "care": "Set it somewhere bright and water only when the soil has dried right through.",
+    "price_myr": 45,
+    "alt": "Close-up of a personalised wedding favour: a small jade plant in a white ribbed pot inside a clear cylinder printed with the names Kimhang and Munyee, with more favours blurred behind",
+    "banner_quality": "low"
+   },
+   {
+    "image": "gifts-07.jpg",
+    "name": "Asparagus Fern — Wrapped & Ribboned",
+    "species": "Asparagus setaceus (Asparagus Fern)",
+    "description": "Layers of feather-fine foliage on a staked stem, wrapped at the base in cream paper and finished with a long dusty-pink satin ribbon. It reads more like a bouquet than a pot plant, except this one stays. A soft, airy gift for desks, shelves, and quiet corners.",
+    "care": "Bright, indirect light and lightly moist soil; never let it dry out completely.",
+    "price_myr": 78,
+    "alt": "Asparagus fern with feathery layered foliage, gift-wrapped in cream paper and tied with a long dusty-pink satin ribbon, photographed on a wooden shelf at home",
+    "banner_quality": "low"
+   },
+   {
+    "image": "gifts-08.jpg",
+    "name": "Grand Opening ZZ Arrangement — Fortune Cat Edition",
+    "species": "Zamioculcas zamiifolia (ZZ Plant) with Sansevieria",
+    "description": "Tall, glossy ZZ stems rise from a rounded cream pot, styled with sansevieria, moss, a gold fan, a beckoning cat, and a red kai ye da ji sign wishing the new venture well. Everything in the arrangement is chosen to say congratulations without a single word. Send it to the launch; it will outlast the ribbon-cutting.",
+    "care": "Happy in almost any light; water roughly once every two to three weeks when the soil is dry.",
+    "price_myr": 148,
+    "alt": "Grand opening gift arrangement of a ZZ plant and sansevieria in a cream ceramic pot, decorated with a red Chinese grand opening sign, red knot tassel, lucky cat figurine and gold fan",
+    "banner_quality": "medium"
+   }
+  ]
+ },
+ {
+  "slug": "featured",
+  "label": "Featured Products",
+  "products": [
+   {
+    "image": "featured-01.jpg",
+    "name": "Nandina Domestica — Sculpted Stoneware Vessel (Soil-Free)",
+    "species": "Nandina domestica (heavenly bamboo)",
+    "description": "Fine, layered leaflets on wiry stems give this nandina the feel of a small tree caught mid-breeze. It sits soil-free in a ridged stoneware vessel finished with river pebbles, so it stays tidy on a console or shelf. One quiet plant that does the styling for you.",
+    "care": "Bright, indirect light; keep the soilless medium lightly moist and never waterlogged.",
+    "price_myr": 149,
+    "banner_quality": "medium",
+    "alt": "Nandina domestica with airy green foliage in a ridged white ceramic vessel, topped with pebbles, on a pale wood console beside a wall-mounted TV and beige curtain"
+   },
+   {
+    "image": "featured-02.jpg",
+    "name": "Monstera Deliciosa — Speckled Stone Planter (Large)",
+    "species": "Monstera deliciosa",
+    "description": "A generous monstera with broad, deeply split leaves, planted in a speckled stone-grey pot and dressed with coco fibre. It grows fast and forgives the occasional missed watering, which makes it an easy first big plant. Shown here with its smaller studio companions; this listing is for the monstera.",
+    "care": "Bright, indirect light; water when the top few centimetres of the mix feel dry.",
+    "price_myr": 189,
+    "banner_quality": "medium",
+    "alt": "Large Monstera deliciosa in a speckled grey ceramic pot against a white wall, surrounded by calathea, prayer plant, rattlesnake plant, and a small Norfolk Island pine in matching pots"
+   },
+   {
+    "image": "featured-03.jpg",
+    "name": "Gift Series — Pedestal Mini (Assorted Aroids)",
+    "species": "Assorted: Aglaonema, Syngonium podophyllum albo-variegata, Schefflera arboricola, Asparagus setaceus, Philodendron",
+    "description": "Small plants with big personalities — red and silver aglaonemas, a marbled syngonium, a feathery asparagus fern — each planted in a footed ceramic pot from our Gift Series. They arrive clean and ready to hand over, no wrapping required. Choose a favourite or let us pick for you.",
+    "care": "Bright, indirect light; water sparingly when the top of the mix feels dry.",
+    "price_myr": 59,
+    "banner_quality": "high",
+    "alt": "Seven mini houseplants in cream and white pedestal ceramic pots arranged across a wooden shelf and serving tray, including a red aglaonema, variegated syngonium, dwarf schefflera, and asparagus fern"
+   }
+  ]
+ },
+ {
+  "slug": "imagery",
+  "images": [
+   {
+    "image": "landscape/landscape-01.jpg",
+    "alt": "Curved stone pathway leading to a leafy garden cafe terrace with a cream umbrella and ornamental grasses",
+    "description": "Wide exterior scene of a garden cafe (Slow Wood venue): a curved striped-stone walkway sweeps past a raised planter of ornamental grasses, ferns and globe lights toward a shaded terrace with a large cream cantilever umbrella and seated guests, framed by dense trees. Soft overcast daylight, strong leading-line composition and real atmosphere.",
+    "banner_quality": "high",
+    "best_use": "hero"
+   },
+   {
+    "image": "event/event-03.jpg",
+    "alt": "Mini succulents in polished steel Plantmood pots nestled in white pebbles against a textured white wall",
+    "description": "Clean, bright product scene: succulents in mirror-polished 'plant mood' branded steel pots sitting in a bed of white pebbles on a stainless counter, with soft depth of field and a large expanse of textured white wall upper-left. Excellent negative space for text, fully on-brand; strongest single product image of the set and a viable hero alternative.",
+    "banner_quality": "high",
+    "best_use": "category-banner"
+   },
+   {
+    "image": "event/event-01.jpg",
+    "alt": "Plantmood pop-up display with houseplants, branded cards, succulents in steel pots and a bowl of soil-free substrate",
+    "description": "Pop-up display shot showing the 'plant mood' brand card and 'Soil-Free Plants' signage among houseplants, branded steel pots, a glass bowl of cork substrate, a scoop and bamboo trays on white pebbles. Tells the brand story (soil-free, tactile, curated) at a glance; composition is fairly busy with limited negative space, so it needs an overlay panel for text.",
+    "banner_quality": "medium",
+    "best_use": "mission-banner"
+   },
+   {
+    "image": "landscape/landscape-02.jpg",
+    "alt": "Concrete Slow Wood sign surrounded by ornamental grasses in front of a dark glass cafe facade",
+    "description": "Close-up of the venue's concrete monolith sign wreathed in fountain grasses and globe lights, backed by a dark reflective glass facade with cafe patrons. The upper dark-glass band gives a moody backdrop that takes a dark overlay and light text well, but the prominent third-party 'Slow Wood' lettering sits dead center, so crop or overlay carefully (fine if events are hosted there).",
+    "banner_quality": "medium",
+    "best_use": "workshop-banner"
+   },
+   {
+    "image": "event/event-04.jpg",
+    "alt": "Overview of the Plantmood event station with plants, brand cards, succulents and scoops on a steel counter",
+    "description": "Rotated 90 degrees: a wide overview of the event station with houseplants, both brand cards, succulents in steel pots, bamboo trays and scoops against the textured white wall. Once rotated it becomes a usable landscape-format shot of the workshop setup, but it is bright and cluttered rather than moody, so it suits a smaller supporting slot.",
+    "banner_quality": "medium",
+    "best_use": "instagram-grid"
+   },
+   {
+    "image": "event/event-02.jpg",
+    "alt": "Cardboard tray of assorted mini succulents in a Plantmood branded box on a wooden table",
+    "description": "Rotated 90 degrees: a branded cardboard tray packed with assorted mini succulents on a wooden table by the storefront glass, with street glare and parked cars in the background. Charming detail for social proof but low banner value due to the sideways orientation, window glare and busy background.",
+    "banner_quality": "low",
+    "best_use": "instagram-grid"
+   }
+  ]
+ }
+]

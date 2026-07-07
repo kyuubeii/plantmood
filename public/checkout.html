@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — Plantmood</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900&family=Hanken+Grotesk:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="section__inner">
+      <h1>Checkout</h1>
+      <p class="muted" style="max-width:620px;">This is a demo checkout — no payment is taken. Your order is recorded and we will contact you to arrange payment and delivery.</p>
+
+      <p class="form-msg error" id="checkout-warning" role="alert" hidden style="max-width:620px;background:hsla(12,44%,44%,0.08);padding:0.9rem 1.1rem;border-radius:8px;"></p>
+
+      <div class="cart-layout" id="checkout-layout" hidden>
+        <form id="checkout-form" novalidate>
+          <div class="form-grid">
+            <label class="field"><span>Full name *</span><input type="text" name="name" required></label>
+            <label class="field"><span>Email *</span><input type="email" name="email" required></label>
+            <label class="field"><span>Phone</span><input type="tel" name="phone" placeholder="+60"></label>
+            <label class="field"><span>Postcode *</span><input type="text" name="postcode" required></label>
+            <label class="field full"><span>Address line 1 *</span><input type="text" name="address1" required></label>
+            <label class="field full"><span>Address line 2</span><input type="text" name="address2"></label>
+            <label class="field"><span>City *</span><input type="text" name="city" required></label>
+            <label class="field"><span>State *</span>
+              <select name="state" required>
+                <option value="">Select state…</option>
+                <option>Kuala Lumpur</option><option>Selangor</option><option>Putrajaya</option>
+                <option>Johor</option><option>Penang</option><option>Perak</option><option>Negeri Sembilan</option>
+                <option>Melaka</option><option>Pahang</option><option>Kedah</option><option>Kelantan</option>
+                <option>Terengganu</option><option>Perlis</option><option>Sabah</option><option>Sarawak</option>
+                <option>Labuan</option>
+              </select>
+            </label>
+            <label class="field full"><span>Order notes</span><textarea name="notes" placeholder="Delivery instructions, gift message…"></textarea></label>
+          </div>
+          <p class="form-msg error" id="checkout-msg"></p>
+          <button class="btn btn--solid" type="submit" style="margin-top:1rem;">Place Order &amp; Send on WhatsApp</button>
+          <p class="muted" style="font-size:0.85rem;margin-top:0.8rem;">We'll record your order and open WhatsApp so you can send it to us to confirm payment &amp; delivery.</p>
+        </form>
+
+        <aside class="summary-card">
+          <div id="checkout-items"></div>
+          <div class="summary-row" style="margin-top:1rem;"><span>Subtotal</span><span id="sum-subtotal"></span></div>
+          <div class="summary-row"><span>Delivery</span><span id="sum-shipping"></span></div>
+          <div class="summary-row total"><span>Total</span><span id="sum-total"></span></div>
+        </aside>
+      </div>
+
+      <div class="empty-note" id="checkout-empty" hidden>
+        <p>Your cart is empty.</p>
+        <a class="btn" href="/shop">Browse the shop</a>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script src="/js/site.js"></script>
+  <script>
+    (async () => {
+      const items = PM.cart.read();
+      if (!items.length) {
+        document.getElementById('checkout-empty').hidden = false;
+        return;
+      }
+
+      const [all, ship] = await Promise.all([
+        PM.api('/api/products'),
+        PM.api('/api/settings/shipping'),
+      ]);
+      const byId = Object.fromEntries(all.map(p => [p.id, p]));
+      const enriched = items.map(i => ({ ...i, p: byId[i.id] }));
+      const lines = enriched.filter(l => l.p && !l.p.soldOut);
+      const dropped = enriched.filter(l => !l.p || l.p.soldOut);
+
+      if (!lines.length) {
+        document.getElementById('checkout-empty').hidden = false;
+        return;
+      }
+
+      document.getElementById('checkout-layout').hidden = false;
+
+      // Tell the user if any cart items can't be ordered, rather than silently omitting them.
+      if (dropped.length) {
+        const names = dropped.map(l => l.p ? l.p.name : 'an item no longer available').join(', ');
+        const warn = document.getElementById('checkout-warning');
+        warn.textContent = `Heads up: ${names} ${dropped.length === 1 ? 'is' : 'are'} sold out or unavailable and won't be included in this order. Your cart total below reflects only the items we can ship.`;
+        warn.hidden = false;
+      }
+
+      document.getElementById('checkout-items').innerHTML = lines.map(l => `
+        <div class="summary-row">
+          <span>${PM.esc(l.p.name)} × ${l.qty}</span>
+          <span>${PM.money(l.p.price * l.qty)}</span>
+        </div>`).join('');
+
+      const subtotal = lines.reduce((s, l) => s + l.p.price * l.qty, 0);
+      const shipping = subtotal >= ship.freeOver ? 0 : ship.flat;
+      document.getElementById('sum-subtotal').textContent = PM.money(subtotal);
+      document.getElementById('sum-shipping').textContent = shipping === 0 ? 'Free' : PM.money(shipping);
+      document.getElementById('sum-total').textContent = PM.money(subtotal + shipping);
+
+      const form = document.getElementById('checkout-form');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('checkout-msg');
+        msg.textContent = '';
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        try {
+          const body = Object.fromEntries(new FormData(form).entries());
+          body.items = lines.map(l => ({ id: l.id, qty: l.qty }));
+          const res = await PM.api('/api/orders', { method: 'POST', body });
+          // Remove only the items that were actually ordered; leave anything else intact.
+          const orderedIds = new Set(lines.map(l => l.id));
+          PM.cart.write(PM.cart.read().filter(i => !orderedIds.has(i.id)));
+          location.href = '/order/' + encodeURIComponent(res.orderNo) +
+            '?token=' + encodeURIComponent(res.token) + '&new=1';
+        } catch (err) {
+          msg.textContent = err.message;
+          btn.disabled = false;
+        }
+      });
+    })().catch(console.error);
+  </script>
+</body>
+</html>

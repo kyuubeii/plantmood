@@ -1,0 +1,16 @@
+# dependencies
+node_modules/
+
+# database (persistent data — lives on the host volume, not in git)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# os / editor cruft
+.DS_Store
+*.log
+
+# local env
+.env
+.env.local

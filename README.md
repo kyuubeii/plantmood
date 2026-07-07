@@ -1,0 +1,72 @@
+# Plantmood 🌱
+
+E-commerce website for **Plantmood** — a Kuala Lumpur plant studio. Design closely follows the
+Soilboy reference sample (cream background, deep-green accents, extended-grotesk headings,
+outline pill buttons), with all photos, products and copy from Plantmood's own catalogue.
+
+## Stack
+
+| Layer    | Tech |
+|----------|------|
+| Backend  | Node.js (≥22.5) + Express 4, SQLite via built-in `node:sqlite` (zero native deps) |
+| Frontend | Static HTML/CSS/vanilla JS, fonts: Archivo (expanded) + Hanken Grotesk |
+| Database | `data/plantmood.db` (created automatically) |
+
+## Run it locally
+
+```bash
+npm install        # first time only
+npm start          # → http://localhost:4000  (auto-seeds the catalogue if empty)
+```
+
+`npm run seed` re-imports `server/seed/catalog.json` at any time (upsert — safe to re-run).
+
+## Deploy (Railway / Render)
+
+The app is a long-running Node server with a SQLite file, so deploy it on a host with a
+**persistent disk** (Railway or Render — not Vercel/serverless, which has an ephemeral filesystem).
+
+1. Push this repo to GitHub (see `.gitignore` — `node_modules/` and `data/` are excluded).
+2. Create a new project from the repo. Build: `npm install`. Start: `npm start` (also in `Procfile`).
+3. **Add a persistent volume** and set env var `PLANTMOOD_DATA_DIR` to the volume's mount path
+   (e.g. `/data`). Without this the database resets on every redeploy.
+4. Set env var `PLANTMOOD_ADMIN_PASSWORD` to your real admin password **before the first boot**
+   (it seeds the initial password; afterwards change it in Admin → Settings).
+5. Deploy. On first boot the catalogue auto-seeds (55 products, 7 categories).
+6. In **Admin → Settings**, set your **WhatsApp number** (orders are sent there) and delivery fees.
+
+Notes: the platform provides `PORT` automatically. Admin login sessions live in memory, so they
+reset on redeploy (just log in again). Node 24+ is required (`node:sqlite`) — pinned via `.nvmrc`
+and `engines`.
+
+## Pages
+
+- `/` — homepage (hero, featured products, event banner, soil-free spotlight, category banners, mission, Instagram, newsletter)
+- `/shop` and `/shop/:category` — catalogue with category filter
+- `/product/:slug` — product detail with related products
+- `/cart`, `/checkout`, `/order/:orderNo` — cart (localStorage) → mock checkout → confirmation
+- `/events`, `/about`, `/plant-care`, `/faq`, `/privacy`, `/contact`
+- `/admin` — management panel
+
+## Admin panel
+
+Open `http://localhost:4000/admin`.
+
+- **Default password: `plantmood2026`** — change it in Admin → Settings
+  (or set `PLANTMOOD_ADMIN_PASSWORD` before first launch).
+- Products: create / edit / delete, price, stock, featured flag
+- Orders: view details, update status (pending → paid → shipped → completed / cancelled)
+- Subscribers & contact messages
+- Settings: delivery fee (default RM 15) and free-delivery threshold (default RM 250)
+
+## Checkout model
+
+The checkout is a **mock** — it validates the cart against live prices/stock, records the
+order, decrements stock, and returns an order number (`PM-YYYY-NNNNNN`). No payment is taken;
+you contact the customer to arrange payment (matches the FAQ copy).
+
+## Product data
+
+Seed data lives in `server/seed/catalog.json` (generated from the categorised photo folders,
+with species identification and MYR pricing). `npm run seed` upserts — safe to re-run after
+editing. Images live under `public/images/<category>/`.
