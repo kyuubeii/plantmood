@@ -19,10 +19,17 @@
       color: inherit; border-radius: 999px; padding: 0.5rem 1.2rem;
     }
     .admin-tabs button.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table.admin { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
     table.admin th, table.admin td { text-align: left; padding: 0.6rem 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
     table.admin th { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.7; }
     table.admin img { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; }
+    table.admin td.msg-text { max-width: 420px; white-space: pre-wrap; }
+    .img-preview {
+      width: 96px; height: 128px; object-fit: cover; border-radius: 8px;
+      border: 1px solid var(--line); background: hsla(var(--black-hsl), 0.04); display: block;
+    }
+    .field-hint { font-size: 0.8rem; opacity: 0.65; margin: 0.3rem 0 0; }
     .row-actions button {
       font-size: 0.85rem; cursor: pointer; background: none; border: 1px solid var(--line);
       border-radius: 999px; padding: 0.25rem 0.75rem; color: inherit; margin-right: 0.3rem;
@@ -155,7 +162,12 @@
             <label class="field"><span>Price (RM) *</span><input name="price" type="number" step="0.01" min="0" value="${p.price ?? ''}" required></label>
             <label class="field"><span>Stock *</span><input name="stock" type="number" min="0" value="${p.stock ?? 5}" required></label>
             <label class="field"><span>Category *</span><select name="category">${catOpts}</select></label>
-            <label class="field"><span>Image path *</span><input name="image" type="text" value="${PM.esc(p.image || '/images/')}" required></label>
+            <label class="field"><span>Image path *</span><input name="image" type="text" value="${PM.esc(p.image || '/images/')}" required>
+              <p class="field-hint">Path to a photo in the site's image folder, e.g. /images/tabletop/tabletop-01.jpg — the preview updates as you type.</p>
+            </label>
+            <div class="field"><span style="display:block;margin-bottom:0.35rem;font-size:0.92rem;font-weight:500;">Image preview</span>
+              <img class="img-preview" data-preview src="${PM.esc(p.image || '')}" alt="" onerror="this.style.opacity=0.25" onload="this.style.opacity=1">
+            </div>
             <label class="field full"><span>Description</span><textarea name="description">${PM.esc(p.description || '')}</textarea></label>
             <label class="field full"><span>Care hint</span><input name="care" type="text" value="${PM.esc(p.care || '')}"></label>
             <label class="field full"><span>Alt text</span><input name="alt" type="text" value="${PM.esc(p.alt || '')}"></label>
@@ -177,7 +189,9 @@
         </div>
         <button class="btn btn--small" id="new-product-btn">+ New product</button>
         <div id="form-slot"></div>
-        <table class="admin" style="margin-top:1.4rem;">
+        ${products.length === 0 ? '<p class="muted" style="margin-top:1.4rem;">No products yet — click “+ New product” to add your first plant.</p>' : `
+        <div class="table-scroll" style="margin-top:1.4rem;">
+        <table class="admin">
           <thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Featured</th><th></th></tr></thead>
           <tbody>
             ${products.map(p => `
@@ -194,12 +208,16 @@
                 </td>
               </tr>`).join('')}
           </tbody>
-        </table>`;
+        </table>
+        </div>`}`;
 
       const slot = document.getElementById('form-slot');
 
       function wireForm(formEl) {
         formEl.querySelector('[data-cancel]').onclick = () => { slot.innerHTML = ''; };
+        const imgInput = formEl.querySelector('[name="image"]');
+        const preview = formEl.querySelector('[data-preview]');
+        imgInput.addEventListener('input', () => { preview.src = imgInput.value.trim(); });
         formEl.addEventListener('submit', async (e) => {
           e.preventDefault();
           const id = formEl.dataset.id;
@@ -249,7 +267,8 @@
           <div class="stat"><div class="n">${orders.filter(o => o.status === 'pending').length}</div><div class="l">pending</div></div>
           <div class="stat"><div class="n">${PM.money(orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0))}</div><div class="l">total value</div></div>
         </div>
-        ${orders.length === 0 ? '<p class="muted">No orders yet.</p>' : `
+        ${orders.length === 0 ? '<p class="muted">No orders yet — they will appear here as soon as a customer checks out.</p>' : `
+        <div class="table-scroll">
         <table class="admin">
           <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Placed</th></tr></thead>
           <tbody>
@@ -263,16 +282,30 @@
                 <td>${PM.money(o.total)}</td>
                 <td>
                   <span class="badge ${PM.esc(o.status)}">${PM.esc(o.status)}</span><br>
-                  <select data-order="${o.id}" style="margin-top:0.4rem;font-size:0.85rem;padding:0.3rem 0.5rem;">
+                  <select data-order="${o.id}" data-status="${PM.esc(o.status)}" aria-label="Change order status" style="margin-top:0.4rem;font-size:0.85rem;padding:0.3rem 0.5rem;">
                     ${statuses.map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
                   </select>
                 </td>
                 <td style="white-space:nowrap;">${PM.esc(o.created_at)}</td>
               </tr>`).join('')}
           </tbody>
-        </table>`}`;
+        </table>
+        </div>`}`;
 
       mount.querySelectorAll('[data-order]').forEach(sel => sel.onchange = async () => {
+        const from = sel.dataset.status;
+        // Cancelling puts items back into stock (and un-cancelling takes them
+        // out again) — make sure that side effect is a deliberate choice.
+        if (sel.value === 'cancelled' &&
+            !confirm('Cancel this order? Its items will be returned to stock.')) {
+          sel.value = from;
+          return;
+        }
+        if (from === 'cancelled' && sel.value !== 'cancelled' &&
+            !confirm('Reactivate this cancelled order? Its items will be taken back out of stock.')) {
+          sel.value = from;
+          return;
+        }
         try {
           await authed('/api/admin/orders/' + sel.dataset.order, { method: 'PUT', body: { status: sel.value } });
           PM.toast('Status updated');
@@ -288,28 +321,32 @@
     /* ---------- subscribers ---------- */
     async function renderSubscribers() {
       const subs = await authed('/api/admin/subscribers');
-      mount.innerHTML = subs.length === 0 ? '<p class="muted">No subscribers yet.</p>' : `
+      mount.innerHTML = subs.length === 0 ? '<p class="muted">No subscribers yet — sign-ups from the newsletter form will appear here.</p>' : `
         <p class="muted">${subs.length} subscriber${subs.length === 1 ? '' : 's'}</p>
+        <div class="table-scroll">
         <table class="admin">
           <thead><tr><th>Email</th><th>Signed up</th></tr></thead>
           <tbody>${subs.map(s => `<tr><td>${PM.esc(s.email)}</td><td>${PM.esc(s.created_at)}</td></tr>`).join('')}</tbody>
-        </table>`;
+        </table>
+        </div>`;
     }
 
     /* ---------- messages ---------- */
     async function renderMessages() {
       const msgs = await authed('/api/admin/messages');
-      mount.innerHTML = msgs.length === 0 ? '<p class="muted">No messages yet.</p>' : `
+      mount.innerHTML = msgs.length === 0 ? '<p class="muted">No messages yet — contact form submissions will appear here.</p>' : `
+        <div class="table-scroll">
         <table class="admin">
           <thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th></tr></thead>
           <tbody>${msgs.map(m => `
             <tr>
               <td>${PM.esc(m.name)}<br><a href="mailto:${PM.esc(m.email)}" style="font-size:0.85rem;">${PM.esc(m.email)}</a></td>
               <td>${PM.esc(m.subject || '—')}</td>
-              <td style="max-width:420px;">${PM.esc(m.message)}</td>
+              <td class="msg-text">${PM.esc(m.message)}</td>
               <td style="white-space:nowrap;">${PM.esc(m.created_at)}</td>
             </tr>`).join('')}</tbody>
-        </table>`;
+        </table>
+        </div>`;
     }
 
     /* ---------- settings ---------- */

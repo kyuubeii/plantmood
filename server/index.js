@@ -375,7 +375,16 @@ app.put('/api/admin/settings', adminAuth, (req, res) => {
 });
 
 // ---------------------------------------------------------------- pages
-app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
+app.use(express.static(PUBLIC_DIR, {
+  extensions: ['html'],
+  setHeaders(res, filePath) {
+    // Images and icons are immutable-ish assets; HTML/CSS/JS stay revalidated
+    // so content and style updates show up immediately.
+    if (/\.(jpe?g|png|webp|avif|gif|svg|ico)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    }
+  },
+}));
 
 const page = (file) => (req, res) => res.sendFile(path.join(PUBLIC_DIR, file));
 app.get('/shop/:category', page('shop.html'));

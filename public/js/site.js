@@ -48,6 +48,8 @@ const PM = {
     if (!t) {
       t = document.createElement('div');
       t.className = 'toast';
+      t.setAttribute('role', 'status');
+      t.setAttribute('aria-live', 'polite');
       document.body.appendChild(t);
     }
     t.textContent = msg;
@@ -81,7 +83,7 @@ const NAV_HTML = `
 <a href="/shop" class="announcement-bar">Plantmood — soil-free plants &amp; curated greens · Kuala Lumpur · follow @plantmood.my</a>
 <header class="site-header">
   <div class="site-header__inner">
-    <button class="burger" aria-label="Menu" onclick="document.querySelector('.mobile-menu').classList.toggle('open')">
+    <button class="burger" aria-label="Menu" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
     <nav class="site-nav" aria-label="Main">
@@ -176,6 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (headerMount) {
     headerMount.innerHTML = NAV_HTML;
 
+    const burger = headerMount.querySelector('.burger');
+    const mobileMenu = headerMount.querySelector('.mobile-menu');
+    burger.addEventListener('click', () => {
+      const open = mobileMenu.classList.toggle('open');
+      burger.setAttribute('aria-expanded', String(open));
+    });
+
     // Transparent header mode (homepage hero): the header floats over the hero
     // with no background; once the user scrolls, it shrinks into a fixed solid
     // bar — mirroring the reference site's transparent → .shrink behaviour.
@@ -218,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sweep = () => {
       // whole sections (never the hero — it has its own load-in)
-      document.querySelectorAll('.section, .section--banner, .section--inset').forEach(s => {
+      document.querySelectorAll('.section, .section--banner, .section--inset, .soilboy-card-section').forEach(s => {
         if (!s.classList.contains('section--hero')) tag(s);
       });
       // staggered items inside card grids
