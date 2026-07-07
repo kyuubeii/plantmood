@@ -104,7 +104,7 @@ const NAV_HTML = `
       <a href="/shop/gifts">Gifts</a>
     </nav>
     <a class="site-logo" href="/" aria-label="Plantmood home">
-      <img src="/images/brand/brand-01.jpg" alt="plant mood logo">
+      <img src="/images/brand/plantmood-logo-transparent.png" alt="plant mood logo">
     </a>
     <div class="header-actions">
       <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener" aria-label="Instagram">
