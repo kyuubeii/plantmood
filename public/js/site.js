@@ -194,6 +194,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
   PM.updateCartBadge();
 
+  /* ---------------- gentle scroll-reveal ----------------
+     Sections and card grids fade in softly as they enter the viewport.
+     Elements are only hidden AFTER being tagged here, so with JS disabled
+     (or prefers-reduced-motion) everything stays fully visible. */
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          e.target.classList.add('pm-in');
+          io.unobserve(e.target);
+        }
+      }
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+
+    const tag = (el, delay = 0) => {
+      if (el.classList.contains('pm-reveal')) return;
+      if (delay) el.style.setProperty('--pm-delay', delay + 's');
+      el.classList.add('pm-reveal');
+      io.observe(el);
+    };
+
+    const sweep = () => {
+      // whole sections (never the hero — it has its own load-in)
+      document.querySelectorAll('.section, .section--banner, .section--inset').forEach(s => {
+        if (!s.classList.contains('section--hero')) tag(s);
+      });
+      // staggered items inside card grids
+      document.querySelectorAll('.product-grid, .insta-grid').forEach(grid => {
+        [...grid.children].forEach((c, i) => tag(c, Math.min(i % 8, 5) * 0.07));
+      });
+    };
+
+    sweep();
+    // product cards render after their API fetch — reveal them as they arrive
+    new MutationObserver(sweep).observe(document.body, { childList: true, subtree: true });
+
+    // safety net: an instant jump (anchor link, keyboard End) can skip past
+    // elements without ever intersecting — reveal anything already scrolled past
+    let catchUpTimer = 0;
+    const catchUp = () => {
+      catchUpTimer = 0;
+      document.querySelectorAll('.pm-reveal:not(.pm-in)').forEach(el => {
+        if (el.getBoundingClientRect().top < 0) el.classList.add('pm-in');
+      });
+    };
+    window.addEventListener('scroll', () => {
+      if (!catchUpTimer) catchUpTimer = setTimeout(catchUp, 120);
+    }, { passive: true });
+  }
+
   const nf = document.getElementById('newsletter-form');
   if (nf) {
     nf.addEventListener('submit', async (e) => {
