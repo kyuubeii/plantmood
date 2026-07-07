@@ -293,8 +293,8 @@ p { margin: 0 0 1em; }
 
 .section--hero {
   position: relative;
-  min-height: 94vh;
-  min-height: 94svh;
+  min-height: 86vh;
+  min-height: 86svh;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -372,7 +372,7 @@ p { margin: 0 0 1em; }
 }
 
 .hero-content h1 {
-  color: var(--sage);
+  color: hsl(var(--white-hsl));
   font-size: clamp(2.55rem, 4.8vw, 5rem);
   font-weight: 450;
   line-height: 1.04;
@@ -772,8 +772,8 @@ details.faq p { margin: 0.9rem 0 0; opacity: 0.85; }
   .product-grid, .product-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .form-grid { grid-template-columns: 1fr; }
   .section--hero {
-    min-height: 86vh;
-    min-height: 86svh;
+    min-height: 80vh;
+    min-height: 80svh;
     align-items: flex-end;
   }
   .hero-slide--01 { background-position: 36% center; }
