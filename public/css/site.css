@@ -249,8 +249,8 @@ p { margin: 0 0 1em; }
 
 .section--hero {
   position: relative;
-  min-height: 88vh;
-  min-height: 88svh;
+  min-height: 94vh;
+  min-height: 94svh;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -677,8 +677,8 @@ details.faq p { margin: 0.9rem 0 0; opacity: 0.85; }
   .product-grid, .product-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .form-grid { grid-template-columns: 1fr; }
   .section--hero {
-    min-height: 82vh;
-    min-height: 82svh;
+    min-height: 86vh;
+    min-height: 86svh;
     align-items: flex-end;
     background-position: 56% 72%;
   }
