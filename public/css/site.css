@@ -300,32 +300,46 @@ p { margin: 0 0 1em; }
   overflow: hidden;
   isolation: isolate;
   background-color: var(--bg);
-  background-size: cover;
-  background-position: 53.7% 68.8%;
-  background-repeat: no-repeat;
 }
 
-.section--hero.hero-soilboy { background-image: url('/images/hero/soilboy-hero-reference.jpg'); }
-
-.section--hero.hero-round-vase {
-  background-image: url('/images/hero/IMG_9409_3840x.jpg');
-  background-position: center bottom;
-}
-
-/* a copy of the hero photo drifts very slowly — a calm, organic breathe */
-.section--hero::before {
-  content: '';
+.hero-slide {
   position: absolute;
   z-index: 0;
   inset: 0;
-  background: inherit;
-  animation: pm-drift 26s ease-in-out infinite alternate;
-  will-change: transform;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: scale(1.02);
+  animation: pm-hero-cycle 21s ease-in-out infinite;
+  will-change: opacity, transform;
 }
 
-@keyframes pm-drift {
-  from { transform: scale(1); }
-  to { transform: scale(1.045); }
+.hero-slide--01 {
+  background-image: url('/images/hero/plantmood-hero-carousel-01.png');
+  background-position: center center;
+}
+
+.hero-slide--02 {
+  background-image: url('/images/hero/plantmood-hero-carousel-02.png');
+  background-position: center center;
+  animation-delay: 7s;
+}
+
+.hero-slide--03 {
+  background-image: url('/images/hero/plantmood-hero-carousel-03.png');
+  background-position: center center;
+  animation-delay: 14s;
+}
+
+@keyframes pm-hero-cycle {
+  0%, 30% { opacity: 1; transform: scale(1.02); }
+  38%, 92% { opacity: 0; transform: scale(1.055); }
+  100% { opacity: 1; transform: scale(1.02); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide { animation: none; }
+  .hero-slide--01 { opacity: 1; transform: none; }
 }
 
 .section--hero::after {
@@ -760,8 +774,10 @@ details.faq p { margin: 0.9rem 0 0; opacity: 0.85; }
     min-height: 86vh;
     min-height: 86svh;
     align-items: flex-end;
-    background-position: 56% 72%;
   }
+  .hero-slide--01 { background-position: 36% center; }
+  .hero-slide--02 { background-position: 52% center; }
+  .hero-slide--03 { background-position: 58% center; }
   .section--hero::after {
     background: linear-gradient(180deg, hsla(var(--white-hsl), 0.28) 0%, hsla(var(--white-hsl), 0.38) 42%, hsla(var(--white-hsl), 0.72) 100%);
   }
