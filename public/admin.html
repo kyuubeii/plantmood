@@ -20,18 +20,18 @@
     }
     .admin-tabs button.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
     .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table.admin { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+    table.admin { width: 100%; border-collapse: collapse; font-size: 1.04rem; }
     table.admin th, table.admin td { text-align: left; padding: 0.6rem 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
-    table.admin th { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.7; }
+    table.admin th { font-weight: 600; font-size: 0.94rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.7; }
     table.admin img { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; }
     table.admin td.msg-text { max-width: 420px; white-space: pre-wrap; }
     .img-preview {
       width: 96px; height: 128px; object-fit: cover; border-radius: 8px;
       border: 1px solid var(--line); background: hsla(var(--black-hsl), 0.04); display: block;
     }
-    .field-hint { font-size: 0.8rem; opacity: 0.65; margin: 0.3rem 0 0; }
+    .field-hint { font-size: 0.9rem; opacity: 0.65; margin: 0.3rem 0 0; }
     .row-actions button {
-      font-size: 0.85rem; cursor: pointer; background: none; border: 1px solid var(--line);
+      font-size: 0.95rem; cursor: pointer; background: none; border: 1px solid var(--line);
       border-radius: 999px; padding: 0.25rem 0.75rem; color: inherit; margin-right: 0.3rem;
     }
     .row-actions button:hover { border-color: var(--ink); }
@@ -39,7 +39,7 @@
       border: 1px solid var(--line); border-radius: 12px; padding: 1.6rem; margin: 1.4rem 0;
       background: hsla(var(--black-hsl), 0.02);
     }
-    .badge { display: inline-block; border-radius: 999px; padding: 0.15rem 0.7rem; font-size: 0.82rem; font-weight: 500; }
+    .badge { display: inline-block; border-radius: 999px; padding: 0.15rem 0.7rem; font-size: 0.92rem; font-weight: 500; }
     .badge.pending { background: #f6e3c5; }
     .badge.paid { background: #d6e4c9; }
     .badge.shipped { background: #cfe0ea; }
@@ -48,8 +48,8 @@
     .login-box { max-width: 380px; margin: 12vh auto; }
     .stat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
     .stat { border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.4rem; min-width: 150px; }
-    .stat .n { font-size: 1.7rem; font-weight: 600; font-family: var(--heading-font); font-stretch: normal; }
-    .stat .l { font-size: 0.85rem; opacity: 0.7; }
+    .stat .n { font-size: 1.95rem; font-weight: 600; font-family: var(--heading-font); font-stretch: normal; }
+    .stat .l { font-size: 0.95rem; opacity: 0.7; }
   </style>
 </head>
 <body>
@@ -57,7 +57,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
       <h1 style="margin:0;">Plantmood Admin</h1>
       <div>
-        <a href="/" style="font-size:0.9rem;margin-right:1rem;">← Back to site</a>
+        <a href="/" style="font-size:1rem;margin-right:1rem;">← Back to site</a>
         <button class="btn btn--small" id="logout-btn" hidden>Log out</button>
       </div>
     </div>
@@ -165,7 +165,7 @@
             <label class="field"><span>Image path *</span><input name="image" type="text" value="${PM.esc(p.image || '/images/')}" required>
               <p class="field-hint">Path to a photo in the site's image folder, e.g. /images/tabletop/tabletop-01.jpg — the preview updates as you type.</p>
             </label>
-            <div class="field"><span style="display:block;margin-bottom:0.35rem;font-size:0.92rem;font-weight:500;">Image preview</span>
+            <div class="field"><span style="display:block;margin-bottom:0.35rem;font-size:1.04rem;font-weight:500;">Image preview</span>
               <img class="img-preview" data-preview src="${PM.esc(p.image || '')}" alt="" onerror="this.style.opacity=0.25" onload="this.style.opacity=1">
             </div>
             <label class="field full"><span>Description</span><textarea name="description">${PM.esc(p.description || '')}</textarea></label>
@@ -275,14 +275,14 @@
             ${orders.map(o => `
               <tr>
                 <td><strong>${PM.esc(o.order_no)}</strong></td>
-                <td>${PM.esc(o.name)}<br><span class="muted" style="font-size:0.85rem;">${PM.esc(o.email)}${o.phone ? ' · ' + PM.esc(o.phone) : ''}</span><br>
-                  <span class="muted" style="font-size:0.85rem;">${PM.esc(o.address1)}${o.address2 ? ', ' + PM.esc(o.address2) : ''}, ${PM.esc(o.postcode)} ${PM.esc(o.city)}, ${PM.esc(o.state)}</span>
-                  ${o.notes ? `<br><em style="font-size:0.85rem;">"${PM.esc(o.notes)}"</em>` : ''}</td>
+                <td>${PM.esc(o.name)}<br><span class="muted" style="font-size:1rem;">${PM.esc(o.email)}${o.phone ? ' · ' + PM.esc(o.phone) : ''}</span><br>
+                  <span class="muted" style="font-size:1rem;">${PM.esc(o.address1)}${o.address2 ? ', ' + PM.esc(o.address2) : ''}, ${PM.esc(o.postcode)} ${PM.esc(o.city)}, ${PM.esc(o.state)}</span>
+                  ${o.notes ? `<br><em style="font-size:1rem;">"${PM.esc(o.notes)}"</em>` : ''}</td>
                 <td>${o.items.map(i => `${PM.esc(i.name)} × ${i.qty}`).join('<br>')}</td>
                 <td>${PM.money(o.total)}</td>
                 <td>
                   <span class="badge ${PM.esc(o.status)}">${PM.esc(o.status)}</span><br>
-                  <select data-order="${o.id}" data-status="${PM.esc(o.status)}" aria-label="Change order status" style="margin-top:0.4rem;font-size:0.85rem;padding:0.3rem 0.5rem;">
+                  <select data-order="${o.id}" data-status="${PM.esc(o.status)}" aria-label="Change order status" style="margin-top:0.4rem;font-size:1rem;padding:0.3rem 0.5rem;">
                     ${statuses.map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
                   </select>
                 </td>
@@ -340,7 +340,7 @@
           <thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th></tr></thead>
           <tbody>${msgs.map(m => `
             <tr>
-              <td>${PM.esc(m.name)}<br><a href="mailto:${PM.esc(m.email)}" style="font-size:0.85rem;">${PM.esc(m.email)}</a></td>
+              <td>${PM.esc(m.name)}<br><a href="mailto:${PM.esc(m.email)}" style="font-size:1rem;">${PM.esc(m.email)}</a></td>
               <td>${PM.esc(m.subject || '—')}</td>
               <td class="msg-text">${PM.esc(m.message)}</td>
               <td style="white-space:nowrap;">${PM.esc(m.created_at)}</td>
@@ -360,7 +360,7 @@
           <label class="field"><span>Free delivery over (RM)</span><input name="free_shipping_over" type="number" step="0.01" min="0" value="${PM.esc(s.free_shipping_over)}"></label>
           <div class="spacer-s"></div>
           <label class="field"><span>WhatsApp number (orders are sent here)</span><input name="whatsapp_number" type="text" inputmode="numeric" placeholder="60123456789" value="${PM.esc(s.whatsapp_number)}"></label>
-          <p class="muted" style="font-size:0.82rem;margin:0.4rem 0 0;">International format, digits only — country code + number, no “+” or spaces. e.g. 60123456789</p>
+          <p class="muted" style="font-size:0.95rem;margin:0.4rem 0 0;">International format, digits only — country code + number, no “+” or spaces. e.g. 60123456789</p>
           <button class="btn btn--solid btn--small" type="submit" style="margin-top:1.2rem;">Save</button>
         </form>
         <form class="drawer" id="pw-form" style="max-width:480px;">
