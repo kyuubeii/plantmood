@@ -18,12 +18,12 @@
 
   <!-- 1 · hero -->
   <section class="section--hero hero-carousel">
-    <div class="hero-slide hero-slide--01" aria-hidden="true"></div>
-    <div class="hero-slide hero-slide--02" aria-hidden="true"></div>
-    <div class="hero-slide hero-slide--03" aria-hidden="true"></div>
+    <div class="hero-slide hero-slide--01" aria-hidden="true" data-content-key="home.hero.slide1" data-content-bg></div>
+    <div class="hero-slide hero-slide--02" aria-hidden="true" data-content-key="home.hero.slide2" data-content-bg></div>
+    <div class="hero-slide hero-slide--03" aria-hidden="true" data-content-key="home.hero.slide3" data-content-bg></div>
     <div class="hero-content">
-      <h1>&lsquo;Plant a little<br>piece of your mood&rsquo;</h1>
-      <a class="btn" href="/shop">Shop Now</a>
+      <h1 data-content-key="home.hero.heading" data-content-multiline>&lsquo;Plant a little<br>piece of your mood&rsquo;</h1>
+      <a class="btn" href="/shop" data-content-key="home.hero.button">Shop Now</a>
     </div>
   </section>
 
@@ -40,76 +40,76 @@
 
   <!-- 3 · mission · black -->
   <section class="section--inset on-dark">
-    <div class="inset-frame inset-frame--mission" style="background-image:url('/images/event/event-01.jpg')">
+    <div class="inset-frame inset-frame--mission" style="background-image:url('/images/event/event-01.jpg')" data-content-key="home.mission.image" data-content-bg>
       <div class="banner-content">
-        <h4 style="font-size:clamp(1.4rem,2.6vw,2rem);font-weight:500;">Succulent workshop + Plant Mood<br>Plant. Create. Grow Together.</h4>
-        <a class="btn" href="/about">Find out more</a>
+        <h4 style="font-size:clamp(1.4rem,2.6vw,2rem);font-weight:500;" data-content-key="home.mission.heading" data-content-multiline>Succulent workshop + Plant Mood<br>Plant. Create. Grow Together.</h4>
+        <a class="btn" href="/about" data-content-key="home.mission.button">Find out more</a>
       </div>
     </div>
   </section>
 
-  <!-- 4 · spotlight · soil-free series -->
+  <!-- 4 · image card · events -->
+  <section class="soilboy-card-section">
+    <div class="soilboy-feature soilboy-feature--image-left">
+      <div class="soilboy-feature__copy">
+        <h2 data-content-key="home.card1.heading">Landscape styling that brings life to cafés, homes, offices, and more</h2>
+        <a class="btn" href="/events" data-content-key="home.card1.button">Book now</a>
+      </div>
+      <figure class="soilboy-feature__media">
+        <img src="/images/landscape/landscape-01.jpg" alt="" data-content-key="home.card1.image">
+      </figure>
+    </div>
+  </section>
+
+  <!-- 5 · spotlight · soil-free series -->
   <section class="section">
     <div class="section__inner">
       <div class="center" style="max-width:720px;margin:0 auto 3rem;">
-        <h2>The Soil-free Series</h2>
-        <p class="muted">Real plants raised in a clean, soilless medium — no spills, no repotting, no fuss. Our signature series, arranged by hand in the studio.</p>
+        <h2 data-content-key="home.soilfree.heading">The Soil-free Series</h2>
+        <p class="muted" data-content-key="home.soilfree.body">Real plants raised in a clean, soilless medium — no spills, no repotting, no fuss. Our signature series, arranged by hand in the studio.</p>
       </div>
       <div class="product-grid product-grid--3" id="soilfree-grid"></div>
       <div class="center" style="margin-top:2.6rem;">
-        <a class="btn" href="/shop/soilfree">View the series</a>
+        <a class="btn" href="/shop/soilfree" data-content-key="home.soilfree.button">View the series</a>
       </div>
     </div>
   </section>
 
-  <!-- 5 · image card · gifts -->
+  <!-- 6 · image card · gifts -->
   <section class="soilboy-card-section">
     <div class="soilboy-feature soilboy-feature--image-right">
       <div class="soilboy-feature__copy">
-        <h3>Thoughtfully curated plant gifts for every occasion</h3>
-        <a class="btn" href="/shop/gifts">Shop now</a>
+        <h3 data-content-key="home.card2.heading">Thoughtfully curated plant gifts for every occasion</h3>
+        <a class="btn" href="/shop/gifts" data-content-key="home.card2.button">Shop now</a>
       </div>
       <figure class="soilboy-feature__media">
-        <img src="/images/gifts/gifts-03.jpg" alt="">
+        <img src="/images/gifts/gifts-03.jpg" alt="" data-content-key="home.card2.image">
       </figure>
     </div>
   </section>
 
-  <!-- 6 · image card · floor plants -->
+  <!-- 7 · image card · floor plants -->
   <section class="soilboy-card-section">
     <div class="soilboy-feature soilboy-feature--image-left">
       <div class="soilboy-feature__copy">
-        <h3>Statement plants for every space</h3>
-        <a class="btn" href="/shop/floor">Shop now</a>
+        <h3 data-content-key="home.card3.heading">Statement plants for every space</h3>
+        <a class="btn" href="/shop/floor" data-content-key="home.card3.button">Shop now</a>
       </div>
       <figure class="soilboy-feature__media">
-        <img src="/images/floor/floor-05.jpg" alt="">
+        <img src="/images/floor/floor-05.jpg" alt="" data-content-key="home.card3.image">
       </figure>
     </div>
   </section>
 
-  <!-- 7 · image card · plant care -->
+  <!-- 8 · image card · plant care -->
   <section class="soilboy-card-section">
     <div class="soilboy-feature soilboy-feature--image-right">
       <div class="soilboy-feature__copy">
-        <h3>Most plants need less from you than you think.</h3>
-        <a class="btn" href="/plant-care">Learn More</a>
+        <h3 data-content-key="home.card4.heading">Most plants need less from you than you think.</h3>
+        <a class="btn" href="/plant-care" data-content-key="home.card4.button">Learn More</a>
       </div>
       <figure class="soilboy-feature__media">
-        <img src="/images/tabletop/tabletop-06.jpg" alt="">
-      </figure>
-    </div>
-  </section>
-
-  <!-- 8 · image card · events -->
-  <section class="soilboy-card-section">
-    <div class="soilboy-feature soilboy-feature--image-left">
-      <div class="soilboy-feature__copy">
-        <h2>Landscape styling that brings life to cafés, homes, offices, and more</h2>
-        <a class="btn" href="/events">Book now</a>
-      </div>
-      <figure class="soilboy-feature__media">
-        <img src="/images/landscape/landscape-01.jpg" alt="">
+        <img src="/images/tabletop/tabletop-06.jpg" alt="" data-content-key="home.card4.image">
       </figure>
     </div>
   </section>
@@ -122,12 +122,12 @@
         <p class="muted"><a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener">@plantmood.my</a></p>
       </div>
       <div class="insta-grid">
-        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/event/event-04.jpg" alt="Plantmood pop-up table with plants and brand cards" loading="lazy"></a>
-        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/gifts/gifts-01.jpg" alt="Gift series arrangement" loading="lazy"></a>
-        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/airplants/airplants-03.jpg" alt="Air plant in ceramic orb" loading="lazy"></a>
-        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/bonsai/bonsai-02.jpg" alt="Monstera adansonii in glass hydro jar" loading="lazy"></a>
-        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/hydroponic/hydroponic-01.jpg" alt="White anthurium growing in water" loading="lazy"></a>
-        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/soilfree/soilfree-01.jpg" alt="Ficus stone garden bowl" loading="lazy"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/event/event-04.jpg" alt="Plantmood pop-up table with plants and brand cards" loading="lazy" data-content-key="home.insta.1"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/gifts/gifts-01.jpg" alt="Gift series arrangement" loading="lazy" data-content-key="home.insta.2"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/airplants/airplants-03.jpg" alt="Air plant in ceramic orb" loading="lazy" data-content-key="home.insta.3"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/bonsai/bonsai-02.jpg" alt="Monstera adansonii in glass hydro jar" loading="lazy" data-content-key="home.insta.4"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/hydroponic/hydroponic-01.jpg" alt="White anthurium growing in water" loading="lazy" data-content-key="home.insta.5"></a>
+        <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener"><img src="/images/soilfree/soilfree-01.jpg" alt="Ficus stone garden bowl" loading="lazy" data-content-key="home.insta.6"></a>
       </div>
     </div>
   </section>

@@ -75,12 +75,43 @@ const PM = {
     if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
   },
+
+  /* Apply owner-edited content over the page's built-in defaults.
+     Only overridden values are fetched, and images are pre-loaded before they
+     swap in — so a broken or missing upload silently keeps the hardcoded
+     default and the page never flashes empty. */
+  async hydrateContent() {
+    let content;
+    try {
+      ({ content } = await this.api('/api/content'));
+    } catch { return; }              // network/API issue → keep HTML defaults
+    if (!content) return;
+
+    document.querySelectorAll('[data-content-key]').forEach((el) => {
+      const value = content[el.getAttribute('data-content-key')];
+      if (value == null || value === '') return;
+
+      if (el.tagName === 'IMG') {
+        const probe = new Image();
+        probe.onload = () => { el.src = value; };
+        probe.src = value;
+      } else if (el.hasAttribute('data-content-bg')) {
+        const probe = new Image();
+        probe.onload = () => { el.style.backgroundImage = `url("${value}")`; };
+        probe.src = value;
+      } else if (el.hasAttribute('data-content-multiline')) {
+        el.innerHTML = this.esc(value).replace(/\n/g, '<br>');
+      } else {
+        el.textContent = value;
+      }
+    });
+  },
 };
 
 /* ---------------- header / footer injection ---------------- */
 
 const NAV_HTML = `
-<a href="/shop" class="announcement-bar">Plantmood — soil-free plants &amp; curated greens · Kuala Lumpur · follow @plantmood.my</a>
+<a href="/shop" class="announcement-bar" data-content-key="announce.text">Plantmood — soil-free plants &amp; curated greens · Kuala Lumpur · follow @plantmood.my</a>
 <header class="site-header">
   <div class="site-header__inner">
     <button class="burger" aria-label="Menu" aria-expanded="false">
@@ -136,8 +167,8 @@ const NAV_HTML = `
 const FOOTER_HTML = `
 <section class="section theme-black newsletter on-dark">
   <div class="section__inner">
-    <h2>Stay Updated</h2>
-    <p class="muted">Sign up with your email address to receive news, restocks and event invites.</p>
+    <h2 data-content-key="newsletter.heading">Stay Updated</h2>
+    <p class="muted" data-content-key="newsletter.body">Sign up with your email address to receive news, restocks and event invites.</p>
     <form id="newsletter-form">
       <input type="email" name="email" placeholder="Email Address" required aria-label="Email address">
       <button class="btn" type="submit">Sign Up</button>
@@ -200,6 +231,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const footerMount = document.getElementById('site-footer');
   if (footerMount) footerMount.innerHTML = FOOTER_HTML;
+
+  // Header/footer are now in the DOM — apply any owner content edits over the
+  // built-in defaults across the whole page.
+  PM.hydrateContent();
 
   PM.updateCartBadge();
 

@@ -1,16 +1,38 @@
 import express from 'express';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { db, getSetting, setSetting, hashPassword, verifyPassword } from './db.js';
+import {
+  db, getSetting, setSetting, hashPassword, verifyPassword,
+  getContentOverrides, getContentValue, setContentValue, deleteContentValue,
+} from './db.js';
+import { CONTENT_REGISTRY, contentByKey } from './content.js';
 import { seedIfEmpty } from './seed.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const PORT = process.env.PORT || 4000;
 
+// Uploaded content images. Defaults to public/images/uploads for local dev; on a
+// host with an ephemeral filesystem point PLANTMOOD_UPLOADS_DIR at the same
+// persistent volume as the database so owner-uploaded photos survive redeploys.
+const UPLOAD_DIR = process.env.PLANTMOOD_UPLOADS_DIR
+  ? path.resolve(process.env.PLANTMOOD_UPLOADS_DIR)
+  : path.join(PUBLIC_DIR, 'images', 'uploads');
+
 const app = express();
+// The image-upload route carries a base64 photo, so it needs a larger body
+// limit than everything else. Mounting it first means body-parser marks the
+// body as read and the default (small) JSON parser below skips it.
+app.use('/api/admin/content/image', express.json({ limit: '14mb' }));
 app.use(express.json());
+
+// Serve uploaded content images (kept out of /public so the folder can live on
+// a persistent volume in production).
+app.use('/uploads', express.static(UPLOAD_DIR, {
+  setHeaders(res) { res.setHeader('Cache-Control', 'public, max-age=604800'); },
+}));
 
 // ---------------------------------------------------------------- helpers
 const clean = (v, max = 500) => String(v ?? '').trim().slice(0, max);
@@ -207,6 +229,13 @@ app.get('/api/settings/shipping', (req, res) => {
   });
 });
 
+// Public content: only the values the owner has overridden. Pages ship their
+// own defaults in the HTML, so this stays tiny (usually empty) and the site is
+// fully readable — SEO-friendly and never blank — even if this request fails.
+app.get('/api/content', (req, res) => {
+  res.json({ content: getContentOverrides() });
+});
+
 // ---------------------------------------------------------------- admin
 const sessions = new Map(); // token -> { created }
 const SESSION_TTL = 1000 * 60 * 60 * 8;
@@ -372,6 +401,106 @@ app.put('/api/admin/settings', adminAuth, (req, res) => {
     setSetting('whatsapp_number', clean(req.body.whatsapp_number, 20).replace(/[^\d]/g, ''));
   }
   res.json({ ok: true });
+});
+
+// ------- site content (editable text & images) -------
+// Only files we created under UPLOAD_DIR are ever deleted — never seed images
+// that ship with the site. Returns a warning string if deletion failed.
+function removeUploadedImage(publicPath) {
+  if (typeof publicPath !== 'string' || !publicPath.startsWith('/uploads/')) return undefined;
+  const name = path.basename(publicPath);
+  const resolved = path.resolve(UPLOAD_DIR, name);
+  if (path.dirname(resolved) !== path.resolve(UPLOAD_DIR)) return undefined; // guard traversal
+  try {
+    if (fs.existsSync(resolved)) fs.unlinkSync(resolved);
+    return undefined;
+  } catch {
+    return `The previous image file (${name}) could not be removed from the server. The site is fine — you can delete it manually later.`;
+  }
+}
+
+// Confirm the bytes really are the image type they claim to be.
+function sniffImageExt(buf) {
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'jpg';
+  if (buf.length >= 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'png';
+  if (buf.length >= 12 && buf.toString('latin1', 0, 4) === 'RIFF' && buf.toString('latin1', 8, 12) === 'WEBP') return 'webp';
+  return null;
+}
+
+app.get('/api/admin/content', adminAuth, (req, res) => {
+  const overrides = getContentOverrides();
+  res.json(CONTENT_REGISTRY.map(c => ({
+    key: c.key, type: c.type, section: c.section, label: c.label, hint: c.hint || '',
+    def: c.def, value: overrides[c.key] ?? null, effective: overrides[c.key] ?? c.def,
+  })));
+});
+
+app.put('/api/admin/content', adminAuth, (req, res) => {
+  const key = clean(req.body.key, 120);
+  const entry = contentByKey.get(key);
+  if (!entry) return res.status(400).json({ error: 'Unknown content item.' });
+  if (entry.type !== 'text') return res.status(400).json({ error: 'This item is a photo — use the upload button.' });
+  const value = String(req.body.value ?? '').replace(/\r\n/g, '\n').trim().slice(0, 2000);
+  // Empty or identical-to-default → drop the override so the built-in text shows.
+  if (!value || value === entry.def) {
+    deleteContentValue(key);
+    return res.json({ ok: true, value: entry.def, usingDefault: true });
+  }
+  setContentValue(key, value);
+  res.json({ ok: true, value, usingDefault: false });
+});
+
+app.post('/api/admin/content/image', adminAuth, (req, res) => {
+  const key = clean(req.body.key, 120);
+  const entry = contentByKey.get(key);
+  if (!entry) return res.status(400).json({ error: 'Unknown content item.' });
+  if (entry.type !== 'image') return res.status(400).json({ error: 'This item is text, not a photo.' });
+
+  const m = /^data:(image\/[a-z+]+);base64,([\s\S]+)$/.exec(String(req.body.dataUrl || ''));
+  if (!m) return res.status(400).json({ error: 'Please choose an image file (JPG, PNG or WebP).' });
+
+  let buf;
+  try { buf = Buffer.from(m[2], 'base64'); } catch { buf = null; }
+  if (!buf || !buf.length) return res.status(400).json({ error: 'The image could not be read. Please try another file.' });
+  if (buf.length > 6 * 1024 * 1024) {
+    return res.status(413).json({ error: 'That image is larger than 6 MB. Please use a smaller photo.' });
+  }
+  const ext = sniffImageExt(buf);
+  if (!ext) return res.status(400).json({ error: 'Only JPG, PNG or WebP images are allowed.' });
+
+  try {
+    if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  } catch {
+    return res.status(500).json({ error: 'Could not prepare the upload folder on the server.' });
+  }
+
+  const safeKey = key.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+  const fname = `${safeKey}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
+  try {
+    fs.writeFileSync(path.join(UPLOAD_DIR, fname), buf);
+  } catch {
+    return res.status(500).json({ error: 'Could not save the image on the server. Your live photo is unchanged.' });
+  }
+
+  // Only after the new file is safely on disk do we switch the live value and
+  // clean up the old upload — so a failure never leaves the page without a photo.
+  const newPath = `/uploads/${fname}`;
+  const previous = getContentValue(key);
+  setContentValue(key, newPath);
+  const warning = previous && previous !== newPath ? removeUploadedImage(previous) : undefined;
+
+  res.json({ ok: true, value: newPath, warning });
+});
+
+// Reset an item back to its built-in default (and tidy up an uploaded photo).
+app.delete('/api/admin/content/:key', adminAuth, (req, res) => {
+  const key = clean(req.params.key, 120);
+  const entry = contentByKey.get(key);
+  if (!entry) return res.status(400).json({ error: 'Unknown content item.' });
+  const current = getContentValue(key);
+  const warning = entry.type === 'image' && current ? removeUploadedImage(current) : undefined;
+  deleteContentValue(key);
+  res.json({ ok: true, value: entry.def, warning });
 });
 
 // ---------------------------------------------------------------- pages

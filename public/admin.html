@@ -30,6 +30,23 @@
       border: 1px solid var(--line); background: hsla(var(--black-hsl), 0.04); display: block;
     }
     .field-hint { font-size: 0.9rem; opacity: 0.65; margin: 0.3rem 0 0; }
+    .img-preview--wide { width: 200px; height: 132px; }
+    .content-field { padding: 1.3rem 0; border-bottom: 1px solid var(--line); }
+    .content-field:last-child { border-bottom: 0; padding-bottom: 0.2rem; }
+    .content-field .field-label { display: block; font-weight: 500; margin-bottom: 0.5rem; }
+    .content-media { display: flex; gap: 1.2rem; align-items: flex-start; flex-wrap: wrap; }
+    .content-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 0.7rem; }
+    .content-actions button {
+      font: inherit; font-size: 0.95rem; cursor: pointer; background: none; border: 1px solid var(--line);
+      border-radius: 999px; padding: 0.32rem 0.95rem; color: inherit;
+    }
+    .content-actions button:hover:not(:disabled) { border-color: var(--ink); }
+    .content-actions button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .content-actions button:disabled { opacity: 0.5; cursor: default; }
+    .content-state { font-size: 0.9rem; opacity: 0.7; }
+    .content-state.custom { color: var(--terracotta, #b5654a); opacity: 1; }
+    .content-field input[type=file] { font-size: 0.95rem; max-width: 100%; }
+    .content-field textarea { min-height: 4.4rem; }
     .row-actions button {
       font-size: 0.95rem; cursor: pointer; background: none; border: 1px solid var(--line);
       border-radius: 999px; padding: 0.25rem 0.75rem; color: inherit; margin-right: 0.3rem;
@@ -76,6 +93,7 @@
     <div id="app-view" hidden>
       <div class="admin-tabs">
         <button data-tab="products" class="active">Products</button>
+        <button data-tab="content">Content</button>
         <button data-tab="orders">Orders</button>
         <button data-tab="subscribers">Subscribers</button>
         <button data-tab="messages">Messages</button>
@@ -139,6 +157,7 @@
       mount.innerHTML = '<p class="muted">Loading…</p>';
       try {
         if (tab === 'products') await renderProducts();
+        if (tab === 'content') await renderContent();
         if (tab === 'orders') await renderOrders();
         if (tab === 'subscribers') await renderSubscribers();
         if (tab === 'messages') await renderMessages();
@@ -254,6 +273,163 @@
         await authed('/api/admin/products/' + p.id, { method: 'DELETE' });
         PM.toast('Deleted');
         renderProducts();
+      });
+    }
+
+    /* ---------- content (editable text & images) ---------- */
+    function contentField(it) {
+      const key = PM.esc(it.key);
+      const custom = it.value != null;
+      const stateHtml = `<span class="content-state ${custom ? 'custom' : ''}" data-state>${custom ? 'Custom' : 'Using default'}</span>`;
+      const resetBtn = `<button type="button" data-reset ${custom ? '' : 'disabled'}>Reset to default</button>`;
+
+      if (it.type === 'image') {
+        return `
+          <div class="content-field" data-key="${key}" data-type="image">
+            <span class="field-label">${PM.esc(it.label)}</span>
+            <div class="content-media">
+              <img class="img-preview img-preview--wide" data-preview src="${PM.esc(it.effective)}" alt="" onerror="this.style.opacity=0.25" onload="this.style.opacity=1">
+              <div style="flex:1;min-width:220px;">
+                ${it.hint ? `<p class="field-hint" style="margin-top:0;">${PM.esc(it.hint)}</p>` : ''}
+                <input type="file" accept="image/jpeg,image/png,image/webp" data-file>
+                <div class="content-actions">
+                  <button type="button" class="primary" data-upload>Upload new photo</button>
+                  ${resetBtn}
+                  ${stateHtml}
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      const multiline = it.def.includes('\n') || (it.effective || '').length > 58;
+      const control = multiline
+        ? `<textarea data-input>${PM.esc(it.effective)}</textarea>`
+        : `<input type="text" data-input value="${PM.esc(it.effective)}">`;
+      return `
+        <div class="content-field" data-key="${key}" data-type="text">
+          <label class="field"><span class="field-label">${PM.esc(it.label)}</span>${control}</label>
+          ${it.hint ? `<p class="field-hint">${PM.esc(it.hint)}</p>` : ''}
+          <div class="content-actions">
+            <button type="button" class="primary" data-save>Save</button>
+            ${resetBtn}
+            ${stateHtml}
+          </div>
+        </div>`;
+    }
+
+    async function renderContent() {
+      const items = await authed('/api/admin/content');
+      const byKey = new Map(items.map(it => [it.key, it]));
+      const sections = [];
+      const bySection = new Map();
+      for (const it of items) {
+        if (!bySection.has(it.section)) { bySection.set(it.section, []); sections.push(it.section); }
+        bySection.get(it.section).push(it);
+      }
+
+      mount.innerHTML = `
+        <p class="muted" style="max-width:640px;margin-bottom:1.6rem;">
+          Edit the words and photos on your website here. Changes go live straight away.
+          Anything you leave alone keeps its built-in default, so the site is never blank.
+        </p>
+        ${sections.map(sec => `
+          <div class="drawer">
+            <h4 style="margin-top:0;">${PM.esc(sec)}</h4>
+            ${bySection.get(sec).map(contentField).join('')}
+          </div>`).join('')}`;
+
+      function setState(field, custom) {
+        const st = field.querySelector('[data-state]');
+        st.textContent = custom ? 'Custom' : 'Using default';
+        st.classList.toggle('custom', custom);
+        const reset = field.querySelector('[data-reset]');
+        if (reset) reset.disabled = !custom;
+      }
+
+      async function withBusy(btn, label, fn) {
+        const original = btn.textContent;
+        btn.disabled = true; btn.textContent = label;
+        try { await fn(); }
+        finally { btn.disabled = false; btn.textContent = original; }
+      }
+
+      mount.querySelectorAll('.content-field').forEach(field => {
+        const it = byKey.get(field.dataset.key);
+
+        // Save (text)
+        const saveBtn = field.querySelector('[data-save]');
+        if (saveBtn) saveBtn.onclick = () => withBusy(saveBtn, 'Saving…', async () => {
+          const input = field.querySelector('[data-input]');
+          try {
+            const r = await authed('/api/admin/content', { method: 'PUT', body: { key: it.key, value: input.value } });
+            it.value = r.usingDefault ? null : r.value;
+            if (r.usingDefault) input.value = it.def;
+            setState(field, !r.usingDefault);
+            PM.toast(r.usingDefault ? 'Reset to default' : 'Saved');
+          } catch (err) {
+            if (String(err.message).includes('authorised')) return showLogin();
+            PM.toast('Could not save: ' + err.message);
+          }
+        });
+
+        // Upload (image)
+        const uploadBtn = field.querySelector('[data-upload]');
+        if (uploadBtn) uploadBtn.onclick = () => {
+          const fileInput = field.querySelector('[data-file]');
+          const file = fileInput.files[0];
+          if (!file) return PM.toast('Please choose a photo first.');
+          if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            return PM.toast('Only JPG, PNG or WebP images are allowed.');
+          }
+          if (file.size > 6 * 1024 * 1024) {
+            return PM.toast('That image is larger than 6 MB — please pick a smaller one.');
+          }
+          withBusy(uploadBtn, 'Uploading…', async () => {
+            try {
+              const dataUrl = await new Promise((resolve, reject) => {
+                const fr = new FileReader();
+                fr.onload = () => resolve(fr.result);
+                fr.onerror = () => reject(new Error('Could not read the file.'));
+                fr.readAsDataURL(file);
+              });
+              const r = await authed('/api/admin/content/image', { method: 'POST', body: { key: it.key, dataUrl } });
+              it.value = r.value;
+              field.querySelector('[data-preview]').src = r.value;
+              fileInput.value = '';
+              setState(field, true);
+              PM.toast('Photo updated');
+              if (r.warning) PM.toast(r.warning);
+            } catch (err) {
+              if (String(err.message).includes('authorised')) return showLogin();
+              PM.toast('Upload failed: ' + err.message);
+            }
+          });
+        };
+
+        // Reset (text or image)
+        const resetBtn = field.querySelector('[data-reset]');
+        if (resetBtn) resetBtn.onclick = async () => {
+          if (!confirm(`Reset “${it.label}” back to the built-in default?`)) return;
+          let done = false;
+          await withBusy(resetBtn, 'Resetting…', async () => {
+            try {
+              const r = await authed('/api/admin/content/' + encodeURIComponent(it.key), { method: 'DELETE' });
+              it.value = null;
+              if (it.type === 'image') field.querySelector('[data-preview]').src = r.value;
+              else field.querySelector('[data-input]').value = it.def;
+              PM.toast('Reset to default');
+              if (r.warning) PM.toast(r.warning);
+              done = true;
+            } catch (err) {
+              if (String(err.message).includes('authorised')) return showLogin();
+              PM.toast('Could not reset: ' + err.message);
+            }
+          });
+          // Runs after withBusy has restored the button, so the "nothing to
+          // reset" disabled state sticks.
+          if (done) setState(field, false);
+        };
       });
     }
 

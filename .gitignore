@@ -7,6 +7,9 @@ data/
 *.db-shm
 *.db-wal
 
+# owner-uploaded content images (user data — not part of the source)
+public/images/uploads/
+
 # os / editor cruft
 .DS_Store
 *.log
