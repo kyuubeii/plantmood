@@ -1,0 +1,158 @@
+
+:root {
+  --bg: hsl(42, 100%, 99%);
+  --ink: hsl(0, 0%, 14.9%);
+  --accent: hsl(131.11, 35.06%, 15.1%);
+  --accent-tint: hsl(131.11, 35.06%, 94%);
+  --terracotta: hsl(12.12, 44%, 44.12%);
+  --terracotta-tint: hsl(12.12, 60%, 95%);
+  --line: hsla(0, 0%, 14.9%, 0.15);
+  --heading-font: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --body-font: 'Karla', 'Helvetica Neue', Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body-font);
+  font-size: 12.5pt;
+  line-height: 1.55;
+}
+
+h1, h2, h3 {
+  font-family: var(--heading-font);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0 0 0.5em;
+  color: var(--accent);
+}
+
+h2 { font-size: 26pt; font-weight: 600; }
+h3 { font-size: 15pt; margin-top: 1.6em; color: var(--ink); }
+
+p { margin: 0 0 0.9em; }
+strong { font-weight: 700; }
+
+a { color: var(--accent); }
+
+.eyebrow {
+  font-family: var(--body-font);
+  font-size: 9.5pt;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin: 0 0 0.4em;
+}
+
+/* ---------------- cover page ---------------- */
+.cover {
+  /* A4 is 297mm tall; Playwright's own top+bottom margins (18mm + 16mm)
+     already remove 34mm, leaving ~263mm of usable content height per page.
+     Keep this comfortably under that so the cover can never itself spill
+     onto a second, near-blank page — the TOC's own break-before:page is
+     what starts the next page, so no break-after is needed here. */
+  height: 250mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.cover__mark { font-size: 46pt; margin-bottom: 0.3em; }
+.cover__eyebrow {
+  font-size: 11pt; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--terracotta); margin-bottom: 0.6em;
+}
+.cover h1 { font-size: 40pt; margin-bottom: 0.5em; }
+.cover__subtitle { font-size: 13pt; color: hsla(0,0%,14.9%,0.75); max-width: 420px; margin-bottom: 1.6em; }
+.cover__date { font-size: 10.5pt; color: hsla(0,0%,14.9%,0.55); }
+
+/* ---------------- table of contents ---------------- */
+.toc__list { list-style: none; margin: 1.4em 0 0; padding: 0; }
+.toc__list li { border-bottom: 1px solid var(--line); }
+.toc__list a {
+  display: flex; align-items: baseline; gap: 0.9em;
+  padding: 0.7em 0.2em; text-decoration: none; color: var(--ink);
+}
+.toc__num { font-family: var(--heading-font); font-size: 15pt; color: var(--terracotta); width: 1.6em; }
+.toc__title { font-size: 13pt; }
+
+/* ---------------- sections ---------------- */
+.tutorial-section {
+  break-before: page;
+  padding-top: 6mm;
+}
+
+ul, ol { margin: 0 0 1em; padding-left: 1.3em; }
+ul li, ol li { margin-bottom: 0.45em; }
+
+ol.steps { padding-left: 0; list-style: none; counter-reset: step; }
+ol.steps li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 2.1em;
+  margin-bottom: 0.65em;
+}
+ol.steps li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: -0.05em;
+  width: 1.5em; height: 1.5em; border-radius: 50%;
+  background: var(--accent); color: var(--bg);
+  font-family: var(--heading-font); font-weight: 600; font-size: 10.5pt;
+  display: flex; align-items: center; justify-content: center;
+}
+
+ul.checklist { list-style: none; padding-left: 0; }
+ul.checklist li { display: flex; align-items: flex-start; gap: 0.7em; margin-bottom: 0.6em; }
+ul.checklist .box {
+  flex: none; width: 0.95em; height: 0.95em; margin-top: 0.28em;
+  border: 1.4px solid var(--ink); border-radius: 3px;
+}
+
+table { width: 100%; border-collapse: collapse; margin: 0.8em 0 1.4em; font-size: 10.8pt; }
+th, td { text-align: left; padding: 0.55em 0.7em; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsla(0,0%,14.9%,0.6); }
+tbody tr:nth-child(odd) { background: hsla(0,0%,14.9%,0.025); }
+
+.callout {
+  display: flex; gap: 0.8em;
+  border-radius: 10px;
+  padding: 0.9em 1.1em;
+  margin: 1em 0 1.4em;
+  break-inside: avoid;
+}
+.callout--tip { background: var(--accent-tint); }
+.callout--warning, .callout--note { background: var(--terracotta-tint); }
+.callout__icon { font-size: 15pt; line-height: 1; }
+.callout__title { font-weight: 700; margin: 0 0 0.25em; font-family: var(--heading-font); font-size: 12.5pt; }
+.callout p:last-child { margin-bottom: 0; }
+
+.shot {
+  margin: 1em 0 1.5em;
+  break-inside: avoid;
+}
+.shot img {
+  width: 100%;
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px hsla(0,0%,14.9%,0.1);
+}
+.shot figcaption {
+  font-size: 9.8pt;
+  color: hsla(0,0%,14.9%,0.6);
+  margin-top: 0.5em;
+  font-style: italic;
+  text-align: center;
+}
+
+.row { display: flex; gap: 0.9em; }
+.row .shot { flex: 1 1 0; margin-top: 0; }
+
+@media print {
+  .tutorial-section { break-before: page; }
+}

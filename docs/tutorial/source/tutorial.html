@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PlantMood Website User Tutorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+    <section class="cover">
+      <div class="cover__mark">🌿</div>
+      <p class="cover__eyebrow">User Tutorial</p>
+      <h1>PlantMood<br>Website User Tutorial</h1>
+      <p class="cover__subtitle">A simple, step-by-step guide to running your website<br>and managing your admin panel — no coding required.</p>
+      <p class="cover__date">Prepared 9 July 2026</p>
+    </section>
+
+    <section class="tutorial-section toc">
+      <p class="eyebrow">Contents</p>
+      <h2>What's inside</h2>
+      <p>Tap any section below to jump straight to it — you don't need to read this guide in order.</p>
+      <ol class="toc__list">
+    <li>
+      <a href="#introduction">
+        <span class="toc__num">01</span>
+        <span class="toc__title">Introduction</span>
+      </a>
+    </li>
+    <li>
+      <a href="#overview">
+        <span class="toc__num">02</span>
+        <span class="toc__title">Website Overview</span>
+      </a>
+    </li>
+    <li>
+      <a href="#customer-guide">
+        <span class="toc__num">03</span>
+        <span class="toc__title">Customer Side Guide</span>
+      </a>
+    </li>
+    <li>
+      <a href="#admin-login">
+        <span class="toc__num">04</span>
+        <span class="toc__title">Admin Login Guide</span>
+      </a>
+    </li>
+    <li>
+      <a href="#admin-dashboard">
+        <span class="toc__num">05</span>
+        <span class="toc__title">Admin Dashboard Guide</span>
+      </a>
+    </li>
+    <li>
+      <a href="#managing-products">
+        <span class="toc__num">06</span>
+        <span class="toc__title">Managing Products / Plants</span>
+      </a>
+    </li>
+    <li>
+      <a href="#managing-content">
+        <span class="toc__num">07</span>
+        <span class="toc__title">Managing Website Text and Images</span>
+      </a>
+    </li>
+    <li>
+      <a href="#troubleshooting">
+        <span class="toc__num">08</span>
+        <span class="toc__title">Common Mistakes and Troubleshooting</span>
+      </a>
+    </li>
+    <li>
+      <a href="#best-practices">
+        <span class="toc__num">09</span>
+        <span class="toc__title">Best Practices</span>
+      </a>
+    </li>
+    <li>
+      <a href="#checklist">
+        <span class="toc__num">10</span>
+        <span class="toc__title">Final Checklist</span>
+      </a>
+    </li></ol>
+    </section>
+
+    <section class="tutorial-section" id="introduction">
+      <p class="eyebrow">Section 1</p>
+      <h2>Introduction</h2>
+      <h3>What this website is for</h3>
+<p>PlantMood is your online plant shop. Customers can browse your plants, view details and prices, and place an order that is sent to you on WhatsApp for payment and delivery. Behind the scenes, you have a private Admin Panel where you manage your products, see incoming orders, and update the words and photos on your website — all without needing a developer for everyday changes.</p>
+<h3>Who should use this tutorial</h3>
+<p>This guide is written for the shop owner or staff member who will manage the PlantMood website day to day. No coding or technical background is needed. If you can use email and WhatsApp, you can use this admin panel.</p>
+
+        <aside class="callout callout--tip">
+          <div class="callout__icon">🌱</div>
+          <div class="callout__body">
+            <p class="callout__title">How to use this guide</p>
+            <p>You do not need to read this tutorial from start to finish. Use the section titles below to jump straight to what you need — for example, go directly to Section 6 if you just want to add a new plant.</p>
+          </div>
+        </aside>
+    </section>
+
+    <section class="tutorial-section" id="overview">
+      <p class="eyebrow">Section 2</p>
+      <h2>Website Overview</h2>
+      <p>The PlantMood website has two sides:</p>
+<ul><li><strong>The public website</strong> — this is what your customers see when they visit your site: the homepage, the shop, plant detail pages, and the checkout.</li><li><strong>The Admin Panel</strong> — a private area only you (and anyone you share the password with) can access, at the web address /admin. This is where you manage everything on the public website.</li></ul>
+
+    <figure class="shot">
+      <img src="../screenshots/01-homepage-hero.png" alt="The public homepage — the first thing a customer sees.">
+      <figcaption>The public homepage — the first thing a customer sees.</figcaption>
+    </figure>
+<p>Every product, price, photo and block of text a customer sees on the public website is controlled from the Admin Panel. Think of the Admin Panel as the “backstage” of your shop, and the public website as the “shop floor.”</p>
+    </section>
+
+    <section class="tutorial-section" id="customer-guide">
+      <p class="eyebrow">Section 3</p>
+      <h2>Customer Side Guide</h2>
+      <p>This section explains what your customers experience, so you understand the journey they go through before an order reaches your WhatsApp.</p>
+<h3>How visitors browse the website</h3>
+<p>A visitor can browse plants from the homepage (scrolling down shows a “Featured Products” section, plus photo sections for different plant styles), or open “Shop” in the top menu to see the full catalogue. On the Shop page, they can tap a category button (for example “Air Plants” or “Bonsai”) to filter to just that type of plant.</p>
+<div class="row">
+    <figure class="shot">
+      <img src="../screenshots/02-homepage-featured.png" alt="The “Featured Products” section on the homepage.">
+      <figcaption>The “Featured Products” section on the homepage.</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="../screenshots/03-shop-listing.png" alt="The Shop page, with category filter buttons.">
+      <figcaption>The Shop page, with category filter buttons.</figcaption>
+    </figure></div>
+<h3>How visitors view a plant</h3>
+<p>Tapping any plant photo opens its detail page: a larger photo, the price, a description, a care tip, and an “Add to Cart” button. If a plant is sold out, the button is replaced with a “Sold out” label and customers cannot add it to their cart.</p>
+
+    <figure class="shot">
+      <img src="../screenshots/04-product-detail.png" alt="A plant detail page, with description, care tip and Add to Cart.">
+      <figcaption>A plant detail page, with description, care tip and Add to Cart.</figcaption>
+    </figure>
+<h3>How visitors order through WhatsApp</h3>
+<p>PlantMood does not take payment on the website itself. Instead, an order is confirmed with the customer directly on WhatsApp. The steps a customer follows are:</p>
+<ol class="steps"><li>Add one or more plants to their Cart.</li><li>Open the Cart and tap “Checkout.”</li><li>Fill in their name, phone, email and delivery address.</li><li>Tap “Place Order &amp; Send on WhatsApp.”</li><li>The website saves their order and shows a confirmation page with a green “Send my order on WhatsApp” button, already filled in with their order number, items and total.</li><li>The customer taps that button, which opens WhatsApp with the message ready — they just tap Send.</li></ol>
+
+    <figure class="shot">
+      <img src="../screenshots/05-cart.png" alt="The Cart page — plants added, with the Checkout button.">
+      <figcaption>The Cart page — plants added, with the Checkout button.</figcaption>
+    </figure>
+
+    <figure class="shot">
+      <img src="../screenshots/06-checkout-form.png" alt="Checkout — the customer fills in delivery details, then places the order.">
+      <figcaption>Checkout — the customer fills in delivery details, then places the order.</figcaption>
+    </figure>
+
+    <figure class="shot">
+      <img src="../screenshots/07-order-whatsapp.png" alt="The order confirmation page, with the “Send my order on WhatsApp” button.">
+      <figcaption>The order confirmation page, with the “Send my order on WhatsApp” button.</figcaption>
+    </figure>
+
+        <aside class="callout callout--note">
+          <div class="callout__icon">📌</div>
+          <div class="callout__body">
+            <p class="callout__title">Where this WhatsApp message goes</p>
+            <p>The order message is sent to the WhatsApp number you set in Admin → Settings. Double-check this number is correct and that you (or your team) actively check it — see the Final Checklist in Section 10.</p>
+          </div>
+        </aside>
+<p>At the same time, the order is automatically recorded in your Admin Panel under the Orders tab — so even if a customer forgets to tap Send in WhatsApp, you still have a record of what they tried to order.</p>
+
+    <figure class="shot">
+      <img src="../screenshots/16-admin-orders-tab.png" alt="The Orders tab — every order is recorded here automatically.">
+      <figcaption>The Orders tab — every order is recorded here automatically.</figcaption>
+    </figure>
+<p>Customers can also reach you without placing an order, using the Contact page for general questions — for example about bulk orders or plant care.</p>
+
+    <figure class="shot">
+      <img src="../screenshots/08-contact-page.png" alt="The Contact page, for general enquiries that are not tied to an order.">
+      <figcaption>The Contact page, for general enquiries that are not tied to an order.</figcaption>
+    </figure>
+    </section>
+
+    <section class="tutorial-section" id="admin-login">
+      <p class="eyebrow">Section 4</p>
+      <h2>Admin Login Guide</h2>
+      <h3>How to access the admin login page</h3>
+<p>Go to your website address and add /admin at the end — for example, yourwebsite.com/admin. You can also tap “Back to site” from inside the admin panel to return to the public website at any time.</p>
+
+    <figure class="shot">
+      <img src="../screenshots/09-admin-login.png" alt="The admin login screen.">
+      <figcaption>The admin login screen.</figcaption>
+    </figure>
+<h3>How to log in</h3>
+<ol class="steps"><li>Open the /admin page.</li><li>Type your admin password into the password box.</li><li>Click “Log in.”</li></ol>
+<p>Once logged in, you stay logged in for several hours, even if you close and reopen your browser tab. A “Log out” button appears at the top right whenever you are logged in.</p>
+<h3>What to do if login fails</h3>
+<ul><li>Check that Caps Lock is not on — passwords are case-sensitive.</li><li>Check for extra spaces before or after the password.</li><li>If you are sure the password is correct and it still fails, the password may have been changed by someone else on your team.</li></ul>
+
+        <aside class="callout callout--warning">
+          <div class="callout__icon">⚠️</div>
+          <div class="callout__body">
+            <p class="callout__title">There is no “Forgot password” link</p>
+            <p>This version of the admin panel does not have a self-service password reset. If you have lost the password and cannot log in at all, you will need your website developer to reset it for you. For this reason, keep your admin password somewhere safe (such as a password manager), and share it only with people who should be able to edit the website.</p>
+          </div>
+        </aside>
+    </section>
+
+    <section class="tutorial-section" id="admin-dashboard">
+      <p class="eyebrow">Section 5</p>
+      <h2>Admin Dashboard Guide</h2>
+      <h3>What the dashboard is for</h3>
+<p>After logging in, you land on the Products tab. Across the top of the admin panel are six tabs — click any tab to switch to that section. Your changes in one tab are saved independently of the others, so you can move between tabs freely.</p>
+
+    <figure class="shot">
+      <img src="../screenshots/10-admin-products-tab.png" alt="The admin panel, showing the tab bar and the Products tab.">
+      <figcaption>The admin panel, showing the tab bar and the Products tab.</figcaption>
+    </figure>
+<h3>How to navigate the admin panel</h3>
+<table><thead><tr><th>Tab</th><th>What it is for</th></tr></thead><tbody><tr><td>Products</td><td>Add, edit, delete plants, and manage prices, stock and photos (by path).</td></tr><tr><td>Content</td><td>Edit the text and photos that appear on your homepage and other pages.</td></tr><tr><td>Orders</td><td>See every order placed on the website and update its status.</td></tr><tr><td>Subscribers</td><td>See everyone who signed up to your newsletter.</td></tr><tr><td>Messages</td><td>See messages sent through the Contact page.</td></tr><tr><td>Settings</td><td>Set your delivery fee, WhatsApp number, and change your admin password.</td></tr></tbody></table>
+    </section>
+
+    <section class="tutorial-section" id="managing-products">
+      <p class="eyebrow">Section 6</p>
+      <h2>Managing Products / Plants</h2>
+      <h3>How to add a new plant/product</h3>
+<ol class="steps"><li>Go to the Products tab.</li><li>Click “+ New product.”</li><li>Fill in the fields: Name, Species, Price, Stock, Category, Image path, Description, Care hint, and Alt text (a short description of the photo, used for accessibility).</li><li>Tick “Featured on homepage” if you want this plant to appear in the Featured Products section of the homepage.</li><li>Click “Create product.”</li></ol>
+
+    <figure class="shot">
+      <img src="../screenshots/11-admin-add-product.png" alt="The “New product” form.">
+      <figcaption>The “New product” form.</figcaption>
+    </figure>
+<h3>How to edit a plant/product</h3>
+<ol class="steps"><li>Go to the Products tab.</li><li>Find the plant in the list and click “Edit” next to it.</li><li>Change any field — name, description, price, stock, category and so on.</li><li>Click “Save changes.”</li></ol>
+
+    <figure class="shot">
+      <img src="../screenshots/12-admin-edit-product.png" alt="Editing an existing plant — the same form, pre-filled.">
+      <figcaption>Editing an existing plant — the same form, pre-filled.</figcaption>
+    </figure>
+<h3>How to set or replace a product photo</h3>
+
+        <aside class="callout callout--warning">
+          <div class="callout__icon">⚠️</div>
+          <div class="callout__body">
+            <p class="callout__title">Important: product photos use a “path,” not a file upload button</p>
+            <p>In the current version, the Products tab does not have an “upload from my computer” button. Instead, you type the location (called a “path”) of a photo that is already stored on the website, into the “Image path” field — for example /images/tabletop/tabletop-04.jpg. As you type, a preview appears so you can confirm it is the right photo before saving.</p>
+          </div>
+        </aside>
+<p>To use a brand-new photo (one that has never been uploaded to the website before) for a product, ask your website developer to add the photo file to the website and give you its path to paste in. This is different from the Content tab in Section 7, where you can upload photos yourself directly from your device.</p>
+<h3>How to delete old/replaced images</h3>
+
+        <aside class="callout callout--note">
+          <div class="callout__icon">📌</div>
+          <div class="callout__body">
+            <p class="callout__title">This feature is not available in the current version</p>
+            <p>There is no button to delete an individual product photo file. Changing a product’s “Image path” simply points that product to a different photo — it does not delete anything.</p>
+          </div>
+        </aside>
+<h3>How to remove a plant/product</h3>
+<ol class="steps"><li>Go to the Products tab.</li><li>Click “Delete” next to the plant you want to remove.</li><li>Confirm when asked — this cannot be undone.</li></ol>
+    </section>
+
+    <section class="tutorial-section" id="managing-content">
+      <p class="eyebrow">Section 7</p>
+      <h2>Managing Website Text and Images</h2>
+      <p>The Content tab is where you edit the words and photos that make up your homepage and a few other pages — the hero banner, the feature cards, the About page photo, and more. Everything is grouped into sections, matching the order they appear on the actual page.</p>
+
+    <figure class="shot">
+      <img src="../screenshots/13-admin-content-tab.png" alt="The Content tab, grouped by page section.">
+      <figcaption>The Content tab, grouped by page section.</figcaption>
+    </figure>
+<h3>How to update a photo</h3>
+<ol class="steps"><li>Find the photo you want to change (each one is labelled, e.g. “Hero photo 1”).</li><li>Read the grey hint text under the label — it tells you the best shape/size of photo for that spot.</li><li>Click “Choose File” and pick a JPG, PNG or WebP photo from your device (maximum 6 MB).</li><li>Click “Upload new photo.”</li></ol>
+<h3>How to edit text</h3>
+<ol class="steps"><li>Find the text field you want to change.</li><li>Click into the box and type your new text, replacing what is there.</li><li>Click “Save.”</li></ol>
+<div class="row">
+    <figure class="shot">
+      <img src="../screenshots/14-admin-content-image-field.png" alt="A photo field — upload, reset, and status label.">
+      <figcaption>A photo field — upload, reset, and status label.</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="../screenshots/15-admin-content-text-field.png" alt="A text field — save, reset, and status label.">
+      <figcaption>A text field — save, reset, and status label.</figcaption>
+    </figure></div>
+<h3>How to save changes</h3>
+<p>Every field saves on its own — click “Save” for text, or “Upload new photo” for images. There is no separate “Publish” step: the moment you click Save or Upload, the change is live on your website.</p>
+<h3>“Using default” vs. “Custom”</h3>
+<p>Next to each field you will see a small label: “Using default” means the website is showing its original built-in text or photo. “Custom” (shown in orange) means you have changed it. Click “Reset to default” at any time to undo your change and return to the original — this also works as the way to remove a photo you uploaded, since it puts the original photo back in its place.</p>
+
+        <aside class="callout callout--tip">
+          <div class="callout__icon">🌱</div>
+          <div class="callout__body">
+            <p class="callout__title">Old photos are cleaned up automatically</p>
+            <p>When you upload a new photo over an existing custom one, or click “Reset to default,” the website automatically deletes the old uploaded photo file for you. You do not need to manage or delete files yourself.</p>
+          </div>
+        </aside>
+<h3>How to check the result on the live website</h3>
+<ol class="steps"><li>Open a new browser tab.</li><li>Go to your website’s normal address (not /admin) and visit the page you changed.</li><li>If you don’t see your change immediately, refresh the page (see Troubleshooting in Section 8).</li></ol>
+    </section>
+
+    <section class="tutorial-section" id="troubleshooting">
+      <p class="eyebrow">Section 8</p>
+      <h2>Common Mistakes and Troubleshooting</h2>
+      <table><thead><tr><th>Problem</th><th>Likely cause</th><th>What to do</th></tr></thead><tbody><tr><td>Image not changing</td><td>Your browser has an old copy of the page saved (“cached”).</td><td>Hard-refresh the page: Cmd+Shift+R on Mac, or Ctrl+F5 on Windows.</td></tr><tr><td>Image not changing (product)</td><td>The “Image path” was typed incorrectly.</td><td>Re-open the product in Edit mode and check the preview image appears — if it looks blank/broken, the path is wrong.</td></tr><tr><td>Wrong text displayed</td><td>The wrong field was edited, or the text was edited on a different tab/section than expected.</td><td>Go back to the Content tab and check you are editing the field under the correct section heading.</td></tr><tr><td>Login failed</td><td>Wrong password, Caps Lock on, or extra spaces typed.</td><td>Retype carefully. If it still fails, see Section 4 — there is no self-service password reset.</td></tr><tr><td>Changes not showing immediately</td><td>You typed a change but did not click Save/Upload/Create.</td><td>Go back and confirm you clicked the button — a small confirmation message appears briefly at the bottom of the screen when a save works.</td></tr><tr><td>Website layout looks odd after uploading a photo</td><td>The photo’s shape (landscape vs. square vs. portrait) does not match what that spot expects.</td><td>Re-read the grey hint text under that photo field, and upload a photo closer to the suggested shape.</td></tr></tbody></table>
+    </section>
+
+    <section class="tutorial-section" id="best-practices">
+      <p class="eyebrow">Section 9</p>
+      <h2>Best Practices</h2>
+      <ul><li><strong>Recommended image size</strong> — keep uploaded photos under 6 MB (the website will reject anything larger). For faster loading, aim well below 1 MB per photo where possible, and always check the shape hint shown under each photo field.</li><li><strong>Use clear product names</strong> — write names the way a customer would search for them, e.g. “Monstera Deliciosa — Medium” rather than an internal code.</li><li><strong>Keep descriptions short and readable</strong> — two to three short sentences work better than a long paragraph. Mention the one or two things that matter most (light needs, size, or what makes it special).</li><li><strong>Check the mobile view after updates</strong> — most customers browse on their phone. After changing a photo or text, open the website on your own phone (or resize your browser window narrower) to make sure it still looks good.</li><li><strong>You do not need to “clean up” unused photos</strong> — as explained in Section 7, the website automatically removes an old uploaded Content photo when you replace or reset it.</li></ul>
+
+    <figure class="shot">
+      <img src="../screenshots/18-mobile-homepage.png" alt="The homepage on a phone-sized screen.">
+      <figcaption>The homepage on a phone-sized screen.</figcaption>
+    </figure>
+    </section>
+
+    <section class="tutorial-section" id="checklist">
+      <p class="eyebrow">Section 10</p>
+      <h2>Final Checklist</h2>
+      <p>Before you consider a website update finished, run through this quick list:</p>
+<ul class="checklist"><li><span class="box"></span>I opened the actual website (not just the admin panel) and confirmed the change looks right.</li><li><span class="box"></span>I checked how the change looks on a phone-sized screen.</li><li><span class="box"></span>For a product change: the price and stock number are correct.</li><li><span class="box"></span>For a product change: the photo shown is the correct plant.</li><li><span class="box"></span>For a text/photo change: the “Custom” label is showing (confirming it saved).</li><li><span class="box"></span>My WhatsApp number in Admin → Settings is correct and I am actively checking that number for new orders.</li><li><span class="box"></span>My admin password is only shared with people who should be editing the website.</li></ul>
+
+    <figure class="shot">
+      <img src="../screenshots/17-admin-settings-tab.png" alt="Settings — delivery fee, WhatsApp number and admin password.">
+      <figcaption>Settings — delivery fee, WhatsApp number and admin password.</figcaption>
+    </figure>
+<p>That’s it — you now know everything needed to run your PlantMood website day to day. If you ever hit something this guide doesn’t cover, that likely means it needs a developer’s help rather than something in the admin panel.</p>
+    </section>
+</body>
+</html>

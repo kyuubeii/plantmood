@@ -7,12 +7,18 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "seed": "node server/seed.js"
+    "seed": "node server/seed.js",
+    "tutorial:screenshots": "node scripts/capture-tutorial-screenshots.js",
+    "tutorial:pdf": "node scripts/build-tutorial-pdf.js",
+    "generate:tutorial": "npm run tutorial:screenshots && npm run tutorial:pdf"
   },
   "engines": {
     "node": ">=24"
   },
   "dependencies": {
     "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
   }
 }
