@@ -137,7 +137,7 @@ const NAV_HTML = `
       <a href="/shop/gifts">Gifts</a>
     </nav>
     <a class="site-logo" href="/" aria-label="Plantmood home">
-      <img src="/images/brand/plantmood-logo-transparent.png" alt="plant mood logo">
+      <img src="/images/brand/plantmood-logo-transparent.png" alt="plant mood logo" width="80" height="68" decoding="async" fetchpriority="high">
     </a>
     <div class="header-actions">
       <a href="https://www.instagram.com/plantmood.my/" target="_blank" rel="noopener" aria-label="Instagram">
@@ -257,7 +257,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (el.classList.contains('pm-reveal')) return;
       if (delay) el.style.setProperty('--pm-delay', delay + 's');
       el.classList.add('pm-reveal');
-      io.observe(el);
+      // If the element is already on screen, reveal it directly (next frame so
+      // it still fades in) rather than waiting for IntersectionObserver, which
+      // can miss firing on some mobile browsers and leave content stuck hidden.
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight && r.bottom > 0) {
+        requestAnimationFrame(() => el.classList.add('pm-in'));
+      } else {
+        io.observe(el);
+      }
     };
 
     const sweep = () => {
@@ -275,18 +283,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // product cards render after their API fetch — reveal them as they arrive
     new MutationObserver(sweep).observe(document.body, { childList: true, subtree: true });
 
-    // safety net: an instant jump (anchor link, keyboard End) can skip past
-    // elements without ever intersecting — reveal anything already scrolled past
+    // Safety net: reveal anything now within (or already past) the viewport.
+    // Scroll events fire reliably even when IntersectionObserver misses on
+    // mobile, so this guarantees content is never left invisible on screen —
+    // whether reached by scrolling or by an instant jump (anchor / End key).
     let catchUpTimer = 0;
     const catchUp = () => {
       catchUpTimer = 0;
       document.querySelectorAll('.pm-reveal:not(.pm-in)').forEach(el => {
-        if (el.getBoundingClientRect().top < 0) el.classList.add('pm-in');
+        if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('pm-in');
       });
     };
     window.addEventListener('scroll', () => {
       if (!catchUpTimer) catchUpTimer = setTimeout(catchUp, 120);
     }, { passive: true });
+
+    // Images and fonts finish loading after DOMContentLoaded and can shift the
+    // layout, bringing tagged sections into view with no scroll — a case mobile
+    // browsers routinely fail to reveal because IntersectionObserver doesn't
+    // fire. Re-check once everything has loaded, and again shortly after, so
+    // content on screen is never left invisible.
+    window.addEventListener('load', () => {
+      catchUp();
+      setTimeout(catchUp, 400);
+    });
   }
 
   const nf = document.getElementById('newsletter-form');
