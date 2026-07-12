@@ -108,6 +108,17 @@
     const T = () => localStorage.getItem('pm_admin_token');
     const authed = (path, opts = {}) => PM.api(path, { ...opts, headers: { 'x-admin-token': T(), ...(opts.headers || {}) } });
 
+    // Read a picked file into a base64 data URL — shared by the Content and
+    // Products image uploads (the actual upload happens on Save, not on pick).
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = () => reject(new Error('Could not read the file.'));
+        fr.readAsDataURL(file);
+      });
+    }
+
     const loginView = document.getElementById('login-view');
     const appView = document.getElementById('app-view');
     const logoutBtn = document.getElementById('logout-btn');
@@ -172,20 +183,26 @@
     function productForm(p = {}) {
       const catOpts = CATS.map(c =>
         `<option value="${PM.esc(c.slug)}" ${p.category === c.slug ? 'selected' : ''}>${PM.esc(c.name)}</option>`).join('');
+      const isEdit = !!p.id;
       return `
         <form class="drawer" data-id="${p.id || ''}">
-          <h4 style="margin-top:0;">${p.id ? 'Edit — ' + PM.esc(p.name) : 'New product'}</h4>
+          <h4 style="margin-top:0;">${isEdit ? 'Edit — ' + PM.esc(p.name) : 'New product'}</h4>
           <div class="form-grid">
             <label class="field"><span>Name *</span><input name="name" type="text" value="${PM.esc(p.name || '')}" required></label>
             <label class="field"><span>Species</span><input name="species" type="text" value="${PM.esc(p.species || '')}"></label>
             <label class="field"><span>Price (RM) *</span><input name="price" type="number" step="0.01" min="0" value="${p.price ?? ''}" required></label>
             <label class="field"><span>Stock *</span><input name="stock" type="number" min="0" value="${p.stock ?? 5}" required></label>
             <label class="field"><span>Category *</span><select name="category">${catOpts}</select></label>
-            <label class="field"><span>Image path *</span><input name="image" type="text" value="${PM.esc(p.image || '/images/')}" required>
-              <p class="field-hint">Path to a photo in the site's image folder, e.g. /images/tabletop/tabletop-01.jpg — the preview updates as you type.</p>
-            </label>
-            <div class="field"><span style="display:block;margin-bottom:0.35rem;font-size:1.04rem;font-weight:500;">Image preview</span>
-              <img class="img-preview" data-preview src="${PM.esc(p.image || '')}" alt="" onerror="this.style.opacity=0.25" onload="this.style.opacity=1">
+            <div class="field full">
+              <span class="field-label" style="display:block;margin-bottom:0.5rem;font-weight:500;">Product photo${isEdit ? '' : ' *'}</span>
+              <div class="content-media">
+                <img class="img-preview" data-preview src="${PM.esc(p.image || '')}" alt="" style="${p.image ? '' : 'opacity:0.25;'}" onerror="this.style.opacity=0.25" onload="this.style.opacity=1">
+                <div style="flex:1;min-width:220px;">
+                  <p class="field-hint" style="margin-top:0;">${isEdit ? 'Current photo — choose a new one to replace it, or leave empty to keep it.' : 'Choose a photo from your device.'}</p>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" data-file>
+                  <p class="field-hint">JPG, PNG or WebP, maximum 6 MB.</p>
+                </div>
+              </div>
             </div>
             <label class="field full"><span>Description</span><textarea name="description">${PM.esc(p.description || '')}</textarea></label>
             <label class="field full"><span>Care hint</span><input name="care" type="text" value="${PM.esc(p.care || '')}"></label>
@@ -193,7 +210,7 @@
             <label class="field"><span><input name="featured" type="checkbox" ${p.featured ? 'checked' : ''} style="width:auto;margin-right:0.5rem;">Featured on homepage</span></label>
           </div>
           <p class="form-msg error"></p>
-          <button class="btn btn--solid btn--small" type="submit" style="margin-top:0.8rem;">${p.id ? 'Save changes' : 'Create product'}</button>
+          <button class="btn btn--solid btn--small" type="submit" style="margin-top:0.8rem;">${isEdit ? 'Save changes' : 'Create product'}</button>
           <button class="btn btn--small" type="button" data-cancel style="margin-left:0.5rem;">Cancel</button>
         </form>`;
     }
@@ -233,23 +250,77 @@
       const slot = document.getElementById('form-slot');
 
       function wireForm(formEl) {
-        formEl.querySelector('[data-cancel]').onclick = () => { slot.innerHTML = ''; };
-        const imgInput = formEl.querySelector('[name="image"]');
+        const isEdit = !!formEl.dataset.id;
         const preview = formEl.querySelector('[data-preview]');
-        imgInput.addEventListener('input', () => { preview.src = imgInput.value.trim(); });
+        const fileInput = formEl.querySelector('[data-file]');
+        const msgEl = formEl.querySelector('.form-msg');
+        const submitBtn = formEl.querySelector('button[type="submit"]');
+        let objectUrl = null;   // local preview URL — revoked when replaced or closed
+        let pickedFile = null;  // chosen photo, only uploaded when the form is saved
+
+        const cleanup = () => { if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; } };
+        formEl.querySelector('[data-cancel]').onclick = () => { cleanup(); slot.innerHTML = ''; };
+
+        // Show a local preview on pick (no upload yet — that happens on Save, so a
+        // cancelled form never leaves an orphan file on the server).
+        fileInput.addEventListener('change', () => {
+          msgEl.textContent = '';
+          const file = fileInput.files[0];
+          if (!file) { pickedFile = null; return; }
+          if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            msgEl.textContent = 'Only JPG, PNG or WebP images are allowed.';
+            fileInput.value = ''; pickedFile = null; return;
+          }
+          if (file.size > 6 * 1024 * 1024) {
+            msgEl.textContent = 'That image is larger than 6 MB — please pick a smaller one.';
+            fileInput.value = ''; pickedFile = null; return;
+          }
+          pickedFile = file;
+          cleanup();
+          objectUrl = URL.createObjectURL(file);
+          preview.src = objectUrl;
+          preview.style.opacity = 1;
+        });
+
         formEl.addEventListener('submit', async (e) => {
           e.preventDefault();
-          const id = formEl.dataset.id;
-          const fd = new FormData(formEl);
-          const body = Object.fromEntries(fd.entries());
-          body.featured = formEl.querySelector('[name="featured"]').checked;
+          msgEl.textContent = '';
+          if (!isEdit && !pickedFile) {   // a photo is required to create a product
+            msgEl.textContent = 'Please choose a product photo.';
+            return;
+          }
+
+          const body = {
+            name: formEl.name.value,
+            species: formEl.species.value,
+            price: formEl.price.value,
+            stock: formEl.stock.value,
+            category: formEl.category.value,
+            description: formEl.description.value,
+            care: formEl.care.value,
+            alt: formEl.alt.value,
+            featured: formEl.querySelector('[name="featured"]').checked,
+          };
+
+          const originalLabel = submitBtn.textContent;
+          submitBtn.disabled = true;                          // prevent double-submit
+          submitBtn.textContent = pickedFile ? 'Uploading…' : 'Saving…';
           try {
-            if (id) await authed('/api/admin/products/' + id, { method: 'PUT', body });
-            else await authed('/api/admin/products', { method: 'POST', body });
+            // Only attach a new image when the admin actually picked one; on edit
+            // with no pick, the server keeps the existing photo.
+            if (pickedFile) body.imageDataUrl = await fileToDataUrl(pickedFile);
+            const r = isEdit
+              ? await authed('/api/admin/products/' + formEl.dataset.id, { method: 'PUT', body })
+              : await authed('/api/admin/products', { method: 'POST', body });
+            cleanup();
             PM.toast('Saved');
+            if (r && r.warning) PM.toast(r.warning);
             renderProducts();
           } catch (err) {
-            formEl.querySelector('.form-msg').textContent = err.message;
+            if (String(err.message).includes('authorised')) return showLogin();
+            msgEl.textContent = err.message;   // keep the form so the admin can retry
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalLabel;
           }
         });
       }
@@ -270,8 +341,9 @@
       mount.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
         const p = products.find(x => x.id === Number(b.dataset.del));
         if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
-        await authed('/api/admin/products/' + p.id, { method: 'DELETE' });
+        const r = await authed('/api/admin/products/' + p.id, { method: 'DELETE' });
         PM.toast('Deleted');
+        if (r && r.warning) PM.toast(r.warning);
         renderProducts();
       });
     }
@@ -387,12 +459,7 @@
           }
           withBusy(uploadBtn, 'Uploading…', async () => {
             try {
-              const dataUrl = await new Promise((resolve, reject) => {
-                const fr = new FileReader();
-                fr.onload = () => resolve(fr.result);
-                fr.onerror = () => reject(new Error('Could not read the file.'));
-                fr.readAsDataURL(file);
-              });
+              const dataUrl = await fileToDataUrl(file);
               const r = await authed('/api/admin/content/image', { method: 'POST', body: { key: it.key, dataUrl } });
               it.value = r.value;
               field.querySelector('[data-preview]').src = r.value;

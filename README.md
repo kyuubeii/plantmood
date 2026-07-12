@@ -54,10 +54,21 @@ Open `http://localhost:4000/admin`.
 
 - **Default password: `plantmood2026`** — change it in Admin → Settings
   (or set `PLANTMOOD_ADMIN_PASSWORD` before first launch).
-- Products: create / edit / delete, price, stock, featured flag
+- Products: create / edit / delete, price, stock, featured flag. **Product photos
+  are uploaded straight from your computer** — JPG, PNG or WebP, up to 6 MB; a
+  preview shows before you save. On create, a photo is required; on edit, leaving
+  the file picker empty keeps the current photo, or pick a new one to replace it.
+  When a photo is replaced or a product is deleted, the old admin-uploaded image
+  is cleaned up automatically (built-in `/images/...` seed photos are never
+  deleted). No file paths to type.
+- Content: edit homepage/site text and photos (same upload rules as products).
 - Orders: view details, update status (pending → paid → shipped → completed / cancelled)
 - Subscribers & contact messages
 - Settings: delivery fee (default RM 15) and free-delivery threshold (default RM 250)
+
+Uploaded images are stored in `UPLOAD_DIR` and served from `/uploads/...`. In
+production (Railway/Render) set **`PLANTMOOD_UPLOADS_DIR`** to a path on the same
+persistent volume as the database so owner-uploaded photos survive redeploys.
 
 ## Checkout model
 

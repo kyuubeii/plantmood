@@ -14,18 +14,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const PORT = process.env.PORT || 4000;
 
-// Uploaded content images. Defaults to public/images/uploads for local dev; on a
-// host with an ephemeral filesystem point PLANTMOOD_UPLOADS_DIR at the same
-// persistent volume as the database so owner-uploaded photos survive redeploys.
+// Admin-uploaded site and product images. Defaults to public/images/uploads for
+// local dev; on a host with an ephemeral filesystem point PLANTMOOD_UPLOADS_DIR
+// at the same persistent volume as the database so owner-uploaded photos survive
+// redeploys. Both the Content editor and the Products editor write here.
 const UPLOAD_DIR = process.env.PLANTMOOD_UPLOADS_DIR
   ? path.resolve(process.env.PLANTMOOD_UPLOADS_DIR)
   : path.join(PUBLIC_DIR, 'images', 'uploads');
 
 const app = express();
-// The image-upload route carries a base64 photo, so it needs a larger body
-// limit than everything else. Mounting it first means body-parser marks the
-// body as read and the default (small) JSON parser below skips it.
+// These admin routes carry a base64 photo, so they need a larger body limit
+// than everything else. Mounting them first means body-parser marks the body
+// as read and the default (small) JSON parser below skips it (no double-parse).
 app.use('/api/admin/content/image', express.json({ limit: '14mb' }));
+app.use('/api/admin/products', express.json({ limit: '14mb' }));
 app.use(express.json());
 
 // Serve uploaded content images (kept out of /public so the folder can live on
@@ -285,28 +287,44 @@ app.post('/api/admin/products', adminAuth, (req, res) => {
   const name = clean(b.name, 200);
   const price = Number(b.price);
   const category = clean(b.category, 60);
-  const image = clean(b.image, 300);
-  if (!name || !Number.isFinite(price) || price < 0 || !category || !image) {
-    return res.status(400).json({ error: 'name, price, category and image are required.' });
+  // 1) validate the ordinary fields first, before touching any files
+  if (!name || !Number.isFinite(price) || price < 0 || !category) {
+    return res.status(400).json({ error: 'Name, price and category are required.' });
   }
   const cat = db.prepare('SELECT slug FROM categories WHERE slug = ?').get(category);
   if (!cat) return res.status(400).json({ error: 'Unknown category.' });
+  // 2) a photo is required to create a product
+  if (!b.imageDataUrl) return res.status(400).json({ error: 'Please choose a product photo.' });
+
   const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'product';
+
+  // 3) save the new photo
+  const saved = saveUploadedImage(b.imageDataUrl, `product-${slugBase}`);
+  if (saved.error) return res.status(saved.status).json({ error: saved.error });
+
   let slug = slugBase, n = 2;
   while (db.prepare('SELECT 1 FROM products WHERE slug = ?').get(slug)) slug = `${slugBase}-${n++}`;
-  const info = db.prepare(
-    `INSERT INTO products (slug, name, species, description, care, price, category, image, alt, stock, featured)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(slug, name, clean(b.species, 200), clean(b.description, 4000), clean(b.care, 500),
-        price, category, image, clean(b.alt, 300),
-        Math.max(0, Math.floor(Number(b.stock) || 0)), b.featured ? 1 : 0);
-  res.json({ ok: true, id: info.lastInsertRowid, slug });
+  try {
+    // 4-5) write the /uploads path into products.image and create the product
+    const info = db.prepare(
+      `INSERT INTO products (slug, name, species, description, care, price, category, image, alt, stock, featured)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(slug, name, clean(b.species, 200), clean(b.description, 4000), clean(b.care, 500),
+          price, category, saved.path, clean(b.alt, 300),
+          Math.max(0, Math.floor(Number(b.stock) || 0)), b.featured ? 1 : 0);
+    res.json({ ok: true, id: info.lastInsertRowid, slug, image: saved.path });
+  } catch (e) {
+    // 6) the insert failed — remove the just-uploaded file so no orphan is left
+    removeUploadedImage(saved.path);
+    throw e;
+  }
 });
 
 app.put('/api/admin/products/:id', adminAuth, (req, res) => {
   const p = db.prepare('SELECT * FROM products WHERE id = ?').get(Number(req.params.id));
   if (!p) return res.status(404).json({ error: 'Product not found' });
   const b = req.body || {};
+
   const merged = {
     name: b.name !== undefined ? clean(b.name, 200) : p.name,
     species: b.species !== undefined ? clean(b.species, 200) : p.species,
@@ -314,7 +332,7 @@ app.put('/api/admin/products/:id', adminAuth, (req, res) => {
     care: b.care !== undefined ? clean(b.care, 500) : p.care,
     price: b.price !== undefined ? Number(b.price) : p.price,
     category: b.category !== undefined ? clean(b.category, 60) : p.category,
-    image: b.image !== undefined ? clean(b.image, 300) : p.image,
+    // image is never edited as text — it changes only when a new photo is uploaded
     alt: b.alt !== undefined ? clean(b.alt, 300) : p.alt,
     stock: b.stock !== undefined ? Math.max(0, Math.floor(Number(b.stock) || 0)) : p.stock,
     featured: b.featured !== undefined ? (b.featured ? 1 : 0) : p.featured,
@@ -325,18 +343,48 @@ app.put('/api/admin/products/:id', adminAuth, (req, res) => {
   if (!db.prepare('SELECT 1 FROM categories WHERE slug = ?').get(merged.category)) {
     return res.status(400).json({ error: 'Unknown category.' });
   }
-  db.prepare(
-    `UPDATE products SET name=?, species=?, description=?, care=?, price=?, category=?, image=?, alt=?, stock=?, featured=?
-     WHERE id=?`
-  ).run(merged.name, merged.species, merged.description, merged.care, merged.price, merged.category,
-        merged.image, merged.alt, merged.stock, merged.featured, p.id);
-  res.json({ ok: true });
+
+  // A new photo is optional on edit. Save it first; only if that succeeds do we
+  // point the row at it and (after the DB commits) remove the old upload.
+  let newImagePath = null;
+  if (b.imageDataUrl) {
+    const saved = saveUploadedImage(b.imageDataUrl, `product-${merged.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
+    if (saved.error) return res.status(saved.status).json({ error: saved.error });
+    newImagePath = saved.path;
+  }
+  const nextImage = newImagePath || p.image; // keep the current photo if none uploaded
+
+  try {
+    db.prepare(
+      `UPDATE products SET name=?, species=?, description=?, care=?, price=?, category=?, image=?, alt=?, stock=?, featured=?
+       WHERE id=?`
+    ).run(merged.name, merged.species, merged.description, merged.care, merged.price, merged.category,
+          nextImage, merged.alt, merged.stock, merged.featured, p.id);
+  } catch (e) {
+    // DB update failed — drop the freshly-uploaded orphan and keep the old image
+    if (newImagePath) removeUploadedImage(newImagePath);
+    throw e;
+  }
+
+  // DB now points at the new photo → safe to delete the previous upload.
+  // removeUploadedImage() only ever touches /uploads/ files, so a built-in
+  // /images/... seed photo is never deleted. A delete failure is non-fatal:
+  // the product update stands and we just surface a warning.
+  let warning;
+  if (newImagePath && p.image !== newImagePath) warning = removeUploadedImage(p.image);
+  res.json({ ok: true, image: nextImage, warning });
 });
 
 app.delete('/api/admin/products/:id', adminAuth, (req, res) => {
-  const info = db.prepare('DELETE FROM products WHERE id = ?').run(Number(req.params.id));
-  if (!info.changes) return res.status(404).json({ error: 'Product not found' });
-  res.json({ ok: true });
+  const p = db.prepare('SELECT * FROM products WHERE id = ?').get(Number(req.params.id));
+  if (!p) return res.status(404).json({ error: 'Product not found' });
+  db.prepare('DELETE FROM products WHERE id = ?').run(p.id);
+  // Order history keeps its own name/price snapshot in order_items, so removing
+  // the product photo here is safe. Only /uploads/ files are deleted — built-in
+  // /images/ seed photos are left untouched — and a failed/absent delete is
+  // non-fatal (the product is already gone).
+  const warning = removeUploadedImage(p.image);
+  res.json({ ok: true, warning });
 });
 
 app.get('/api/admin/orders', adminAuth, (req, res) => {
@@ -427,6 +475,44 @@ function sniffImageExt(buf) {
   return null;
 }
 
+// Shared image-upload handler for both the Content editor and the Products
+// editor. Decodes an admin-supplied data URL, validates it hard (never trusts
+// the client's declared MIME type or extension — the real type is sniffed from
+// the bytes), and writes it into UPLOAD_DIR under an unpredictable random name.
+// Returns { path: '/uploads/<file>' } on success, or { error, status } on
+// failure so the caller can respond without leaking server paths.
+function saveUploadedImage(dataUrl, namePrefix) {
+  const m = /^data:(image\/[a-z+]+);base64,([\s\S]+)$/.exec(String(dataUrl || ''));
+  if (!m) return { error: 'Please choose an image file (JPG, PNG or WebP).', status: 400 };
+
+  let buf;
+  try { buf = Buffer.from(m[2], 'base64'); } catch { buf = null; }
+  if (!buf || !buf.length) return { error: 'The image could not be read. Please try another file.', status: 400 };
+  if (buf.length > 6 * 1024 * 1024) {
+    return { error: 'That image is larger than 6 MB. Please use a smaller photo.', status: 413 };
+  }
+  const ext = sniffImageExt(buf); // magic-byte check — SVG/GIF/HTML/etc. rejected here
+  if (!ext) return { error: 'Only JPG, PNG or WebP images are allowed.', status: 400 };
+
+  try {
+    if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  } catch {
+    return { error: 'Could not prepare the upload folder on the server.', status: 500 };
+  }
+
+  // Sanitise the prefix (no path traversal / odd chars) and add random bytes so
+  // filenames are unpredictable and never collide with an existing file.
+  const safePrefix = String(namePrefix || 'img')
+    .replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 40) || 'img';
+  const fname = `${safePrefix}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
+  try {
+    fs.writeFileSync(path.join(UPLOAD_DIR, fname), buf);
+  } catch {
+    return { error: 'Could not save the image on the server.', status: 500 };
+  }
+  return { path: `/uploads/${fname}` };
+}
+
 app.get('/api/admin/content', adminAuth, (req, res) => {
   const overrides = getContentOverrides();
   res.json(CONTENT_REGISTRY.map(c => ({
@@ -456,35 +542,12 @@ app.post('/api/admin/content/image', adminAuth, (req, res) => {
   if (!entry) return res.status(400).json({ error: 'Unknown content item.' });
   if (entry.type !== 'image') return res.status(400).json({ error: 'This item is text, not a photo.' });
 
-  const m = /^data:(image\/[a-z+]+);base64,([\s\S]+)$/.exec(String(req.body.dataUrl || ''));
-  if (!m) return res.status(400).json({ error: 'Please choose an image file (JPG, PNG or WebP).' });
-
-  let buf;
-  try { buf = Buffer.from(m[2], 'base64'); } catch { buf = null; }
-  if (!buf || !buf.length) return res.status(400).json({ error: 'The image could not be read. Please try another file.' });
-  if (buf.length > 6 * 1024 * 1024) {
-    return res.status(413).json({ error: 'That image is larger than 6 MB. Please use a smaller photo.' });
-  }
-  const ext = sniffImageExt(buf);
-  if (!ext) return res.status(400).json({ error: 'Only JPG, PNG or WebP images are allowed.' });
-
-  try {
-    if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  } catch {
-    return res.status(500).json({ error: 'Could not prepare the upload folder on the server.' });
-  }
-
-  const safeKey = key.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
-  const fname = `${safeKey}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
-  try {
-    fs.writeFileSync(path.join(UPLOAD_DIR, fname), buf);
-  } catch {
-    return res.status(500).json({ error: 'Could not save the image on the server. Your live photo is unchanged.' });
-  }
+  const saved = saveUploadedImage(req.body.dataUrl, key);
+  if (saved.error) return res.status(saved.status).json({ error: saved.error });
 
   // Only after the new file is safely on disk do we switch the live value and
   // clean up the old upload — so a failure never leaves the page without a photo.
-  const newPath = `/uploads/${fname}`;
+  const newPath = saved.path;
   const previous = getContentValue(key);
   setContentValue(key, newPath);
   const warning = previous && previous !== newPath ? removeUploadedImage(previous) : undefined;
