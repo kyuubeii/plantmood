@@ -72,8 +72,8 @@ persistent volume as the database so owner-uploaded photos survive redeploys.
 
 ### Vercel
 
-The repository now includes a Vercel Express entry point (`server.js`) and
-route discovery configuration, so all page URLs (`/shop`, `/about`,
+The repository now includes a Vercel serverless entry point (`api/index.js`)
+and a catch-all rewrite, so all page URLs (`/shop`, `/about`,
 `/product/:slug`, etc.) and `/api/*` endpoints are served instead of only the
 static homepage. Vercel's deployment filesystem is read-only, so the app uses
 `/tmp` automatically for SQLite and uploads there.
