@@ -6,10 +6,18 @@ import crypto from 'node:crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // On hosts like Railway/Render, point PLANTMOOD_DATA_DIR at a persistent volume
-// so the SQLite database survives restarts and redeploys.
+// so the SQLite database survives restarts and redeploys. Vercel functions have
+// a read-only deployment bundle; /tmp is their only writable location.
+//
+// IMPORTANT: /tmp is ephemeral on Vercel. It keeps the storefront/API running
+// within a warm function instance, but is not a replacement for a persistent
+// database. Use PLANTMOOD_DATA_DIR on a host with a persistent disk for the
+// admin, orders and other owner-managed data.
 const DATA_DIR = process.env.PLANTMOOD_DATA_DIR
   ? path.resolve(process.env.PLANTMOOD_DATA_DIR)
-  : path.join(__dirname, '..', 'data');
+  : process.env.VERCEL
+    ? path.join('/tmp', 'plantmood-data')
+    : path.join(__dirname, '..', 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 export const db = new DatabaseSync(path.join(DATA_DIR, 'plantmood.db'));

@@ -70,6 +70,20 @@ Uploaded images are stored in `UPLOAD_DIR` and served from `/uploads/...`. In
 production (Railway/Render) set **`PLANTMOOD_UPLOADS_DIR`** to a path on the same
 persistent volume as the database so owner-uploaded photos survive redeploys.
 
+### Vercel
+
+The repository now includes a Vercel Express entry point (`server.js`) and
+route discovery configuration, so all page URLs (`/shop`, `/about`,
+`/product/:slug`, etc.) and `/api/*` endpoints are served instead of only the
+static homepage. Vercel's deployment filesystem is read-only, so the app uses
+`/tmp` automatically for SQLite and uploads there.
+
+`/tmp` is reset whenever Vercel starts a new function instance. That makes a
+Vercel deployment suitable for a demo storefront, but **not** for persistent
+orders, stock, admin edits or uploaded images. For a live shop, keep this app
+on Railway/Render with a persistent volume, or migrate its SQLite data to a
+persistent hosted database before relying on Vercel.
+
 ## Checkout model
 
 The checkout is a **mock** — it validates the cart against live prices/stock, records the

@@ -17,12 +17,15 @@ const PORT = process.env.PORT || 4000;
 // Admin-uploaded site and product images. Defaults to public/images/uploads for
 // local dev; on a host with an ephemeral filesystem point PLANTMOOD_UPLOADS_DIR
 // at the same persistent volume as the database so owner-uploaded photos survive
-// redeploys. Both the Content editor and the Products editor write here.
+// redeploys. Vercel permits writes only in /tmp, so use that location there
+// rather than failing every request that reaches an upload endpoint.
 const UPLOAD_DIR = process.env.PLANTMOOD_UPLOADS_DIR
   ? path.resolve(process.env.PLANTMOOD_UPLOADS_DIR)
+  : process.env.VERCEL
+    ? path.join('/tmp', 'plantmood-uploads')
   : path.join(PUBLIC_DIR, 'images', 'uploads');
 
-const app = express();
+export const app = express();
 // These admin routes carry a base64 photo, so they need a larger body limit
 // than everything else. Mounting them first means body-parser marks the body
 // as read and the default (small) JSON parser below skips it (no double-parse).
@@ -599,6 +602,12 @@ try {
   console.error('Seed on startup failed:', e.message);
 }
 
-app.listen(PORT, () => {
-  console.log(`Plantmood running on port ${PORT}`);
-});
+// Vercel invokes the exported Express application as a serverless function.
+// Keep listening only for the existing local/Railway start command.
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Plantmood running on port ${PORT}`);
+  });
+}
+
+export default app;
