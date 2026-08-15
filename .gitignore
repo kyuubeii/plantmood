@@ -17,3 +17,5 @@ public/images/uploads/
 # local env
 .env
 .env.local
+.vercel
+.env*
