@@ -33,6 +33,31 @@ empty database and never again on a live shop. Seeding no longer happens automat
 boot — that automatic behaviour is exactly what reset the shop to factory prices after a
 redeploy.
 
+## Backups
+
+A GitHub Actions workflow (`.github/workflows/backup.yml`) snapshots the shop
+every night at 02:00 Malaysia time into a **private** Supabase Storage bucket
+(`plantmood-backups`), keeping 30 days.
+
+```bash
+npm run backup                     # take one now
+npm run backup -- --list           # what is stored
+npm run restore -- <name> --dry-run
+npm run restore -- <name>
+```
+
+Snapshots cover products, prices, categories, site content, settings, orders and
+line items. They are **never** committed to git — this repository is public and
+orders contain customer names, phone numbers and addresses. The backup refuses
+to run if the bucket is public, and refuses to store a snapshot with zero
+products (which would mean bad credentials, and would rotate good snapshots out).
+
+Restores are additive: rows are upserted by slug / key / order_no and nothing is
+deleted, so restoring recovers what was lost without discarding newer work.
+
+The workflow needs three repository secrets (Settings → Secrets and variables →
+Actions): `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`.
+
 ## Restoring data from an old SQLite database
 
 ```bash
