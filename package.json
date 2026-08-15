@@ -6,8 +6,11 @@
   "type": "module",
   "main": "server/index.js",
   "scripts": {
-    "start": "node server/index.js",
-    "seed": "node server/seed.js",
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "migrate": "node --env-file-if-exists=.env scripts/migrate.js",
+    "seed": "node --env-file-if-exists=.env server/seed.js",
+    "import:sqlite": "node --env-file-if-exists=.env scripts/import-sqlite.js",
+    "import:uploads": "node --env-file-if-exists=.env scripts/import-uploads.js",
     "tutorial:screenshots": "node scripts/capture-tutorial-screenshots.js",
     "tutorial:pdf": "node scripts/build-tutorial-pdf.js",
     "generate:tutorial": "npm run tutorial:screenshots && npm run tutorial:pdf"
@@ -16,7 +19,9 @@
     "node": ">=24"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "@supabase/supabase-js": "^2.112.3",
+    "express": "^4.19.2",
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
     "playwright": "^1.61.1"

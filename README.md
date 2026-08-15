@@ -8,36 +8,61 @@ outline pill buttons), with all photos, products and copy from Plantmood's own c
 
 | Layer    | Tech |
 |----------|------|
-| Backend  | Node.js (≥22.5) + Express 4, SQLite via built-in `node:sqlite` (zero native deps) |
+| Backend  | Node.js (≥22.5) + Express 4, Postgres via `postgres` |
 | Frontend | Static HTML/CSS/vanilla JS, fonts: Archivo (expanded) + Hanken Grotesk |
-| Database | `data/plantmood.db` (created automatically) |
+| Database | Supabase Postgres |
+| Uploads  | Supabase Storage (public bucket, served through `/uploads/...`) |
+
+Nothing is stored on the host's filesystem. That is deliberate: the app used to keep a
+SQLite file and uploaded photos on local disk, which meant every price, photo and order
+the owner entered was destroyed the next time the container was replaced.
 
 ## Run it locally
 
 ```bash
-npm install        # first time only
-npm start          # → http://localhost:4000  (auto-seeds the catalogue if empty)
+npm install                # first time only
+cp .env.example .env       # then fill in the Supabase values
+npm run migrate            # create the schema (safe to re-run)
+npm run seed               # load server/seed/catalog.json — see the warning below
+npm start                  # → http://localhost:4000
 ```
 
-`npm run seed` re-imports `server/seed/catalog.json` at any time (upsert — safe to re-run).
+⚠️ **`npm run seed` overwrites prices, stock and photos** for every product whose slug is in
+`catalog.json`. It is a first-time setup command, not a maintenance one. Run it once on an
+empty database and never again on a live shop. Seeding no longer happens automatically on
+boot — that automatic behaviour is exactly what reset the shop to factory prices after a
+redeploy.
 
-## Deploy (Railway / Render)
+## Restoring data from an old SQLite database
 
-The app is a long-running Node server with a SQLite file, so deploy it on a host with a
-**persistent disk** (Railway or Render — not Vercel/serverless, which has an ephemeral filesystem).
+```bash
+npm run migrate
+npm run import:sqlite  -- /path/to/plantmood.db --dry-run   # preview first
+npm run import:sqlite  -- /path/to/plantmood.db
+npm run import:uploads -- /path/to/uploads                  # the photo files
+```
 
-1. Push this repo to GitHub (see `.gitignore` — `node_modules/` and `data/` are excluded).
-2. Create a new project from the repo. Build: `npm install`. Start: `npm start` (also in `Procfile`).
-3. **Add a persistent volume** and set env var `PLANTMOOD_DATA_DIR` to the volume's mount path
-   (e.g. `/data`). Without this the database resets on every redeploy.
-4. Set env var `PLANTMOOD_ADMIN_PASSWORD` to your real admin password **before the first boot**
-   (it seeds the initial password; afterwards change it in Admin → Settings).
-5. Deploy. On first boot the catalogue auto-seeds (55 products, 7 categories).
+The importer reads whichever columns the old file actually has, so a database from an
+older version of the schema still imports. Products, categories, settings and content are
+upserted by their natural key and orders are skipped if already present, so both commands
+are safe to re-run after an interruption.
+
+## Deploy
+
+Any host works now — there is no persistent-disk requirement.
+
+1. Push this repo to GitHub (`.gitignore` excludes `node_modules/` and `.env`).
+2. Create the project from the repo. Build: `npm install`. Start: `npm start` (also in `Procfile`).
+3. Set the environment variables from `.env.example` — `DATABASE_URL`, `SUPABASE_URL`,
+   `SUPABASE_SERVICE_KEY`. Use the Supabase **transaction pooler** (port 6543) for
+   `DATABASE_URL` on serverless hosts.
+4. Set `PLANTMOOD_ADMIN_PASSWORD` **before the first `npm run migrate`** (it seeds the
+   initial password; afterwards change it in Admin → Settings).
+5. Run `npm run migrate` once against the production database.
 6. In **Admin → Settings**, set your **WhatsApp number** (orders are sent there) and delivery fees.
 
 Notes: the platform provides `PORT` automatically. Admin login sessions live in memory, so they
-reset on redeploy (just log in again). Node 24+ is required (`node:sqlite`) — pinned via `.nvmrc`
-and `engines`.
+reset on redeploy (just log in again).
 
 ## Pages
 
@@ -66,23 +91,21 @@ Open `http://localhost:4000/admin`.
 - Subscribers & contact messages
 - Settings: delivery fee (default RM 15) and free-delivery threshold (default RM 250)
 
-Uploaded images are stored in `UPLOAD_DIR` and served from `/uploads/...`. In
-production (Railway/Render) set **`PLANTMOOD_UPLOADS_DIR`** to a path on the same
-persistent volume as the database so owner-uploaded photos survive redeploys.
+Uploaded images go to a public Supabase Storage bucket. The database still records them as
+`/uploads/<file>`, and the app redirects that path to the storage CDN — so the `/uploads/`
+prefix keeps distinguishing an owner upload from a built-in `/images/...` seed photo, and
+only the former is ever deleted.
 
 ### Vercel
 
-The repository now includes a Vercel serverless entry point (`api/index.js`)
-and a catch-all rewrite, so all page URLs (`/shop`, `/about`,
-`/product/:slug`, etc.) and `/api/*` endpoints are served instead of only the
-static homepage. Vercel's deployment filesystem is read-only, so the app uses
-`/tmp` automatically for SQLite and uploads there.
+The repository includes a Vercel serverless entry point (`api/index.js`) and a catch-all
+rewrite, so all page URLs (`/shop`, `/about`, `/product/:slug`, etc.) and `/api/*` endpoints
+are served instead of only the static homepage.
 
-`/tmp` is reset whenever Vercel starts a new function instance. That makes a
-Vercel deployment suitable for a demo storefront, but **not** for persistent
-orders, stock, admin edits or uploaded images. For a live shop, keep this app
-on Railway/Render with a persistent volume, or migrate its SQLite data to a
-persistent hosted database before relying on Vercel.
+Vercel's filesystem is read-only apart from `/tmp`, which is wiped on every cold start.
+Since the app no longer writes to disk at all, that is no longer a problem — but it is also
+why `DATABASE_URL` must point at the **transaction pooler** (port 6543): each function
+invocation gets a pooled connection instead of opening its own Postgres backend.
 
 ## Checkout model
 
@@ -93,5 +116,8 @@ you contact the customer to arrange payment (matches the FAQ copy).
 ## Product data
 
 Seed data lives in `server/seed/catalog.json` (generated from the categorised photo folders,
-with species identification and MYR pricing). `npm run seed` upserts — safe to re-run after
-editing. Images live under `public/images/<category>/`.
+with species identification and MYR pricing). Images live under `public/images/<category>/`.
+
+`npm run seed` upserts by slug, so re-running it **replaces any price, stock or photo the
+owner has since changed in the admin panel**. Use it to populate an empty database, not to
+update a live one.

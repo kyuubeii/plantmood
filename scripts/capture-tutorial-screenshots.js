@@ -1,19 +1,35 @@
 #!/usr/bin/env node
 /* Plantmood — tutorial screenshot capture.
 
-   Boots a throw-away instance of the site (its own port, its own temporary
-   SQLite database and upload folder — never touches your real local dev data
-   or the live Railway site), drives it with a real browser via Playwright,
+   Boots an instance of the site, drives it with a real browser via Playwright,
    and saves clean screenshots into docs/tutorial/screenshots/.
 
-   Why an isolated instance: so the tutorial's screenshots always show a
-   predictable, clean catalogue (the 55 seeded demo products) and can safely
-   use an obviously-fake demo customer for the checkout screenshots, without
-   any risk of touching real orders, real content edits, or your real admin
-   password.
+   ⚠️ THIS SCRIPT IS CURRENTLY DISABLED — see the guard below.
+
+   It used to isolate itself with PLANTMOOD_DATA_DIR / PLANTMOOD_UPLOADS_DIR,
+   pointing the server at a throw-away SQLite file and upload folder. Those
+   variables no longer exist: the app now talks to Supabase Postgres and
+   Supabase Storage, which the script cannot redirect the same way.
+
+   Left as-is it would boot against the REAL database and create demo products,
+   demo orders and demo uploads in the live shop — and seed DEMO_ADMIN_PASSWORD.
+   To restore it, point the spawned server at a separate throw-away Supabase
+   project (its own DATABASE_URL / SUPABASE_URL / SUPABASE_SERVICE_KEY) and
+   re-enable it here.
 
    Run: npm run tutorial:screenshots
 */
+
+if (process.env.PLANTMOOD_ALLOW_DEMO_WRITES !== '1') {
+  console.error(
+    'Refusing to run: this script writes demo products, orders and uploads through the\n' +
+    'app, and since the move to Supabase it can no longer isolate itself — it would\n' +
+    'corrupt the live shop.\n\n' +
+    'Point DATABASE_URL / SUPABASE_URL / SUPABASE_SERVICE_KEY at a throw-away Supabase\n' +
+    'project, then re-run with PLANTMOOD_ALLOW_DEMO_WRITES=1.'
+  );
+  process.exit(1);
+}
 
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';

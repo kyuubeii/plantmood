@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "plantmood",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["server/index.js"],
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
       "port": 4000
     }
   ]

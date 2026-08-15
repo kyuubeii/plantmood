@@ -1,158 +1,177 @@
-import { DatabaseSync } from 'node:sqlite';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
-import fs from 'node:fs';
+import postgres from 'postgres';
 import crypto from 'node:crypto';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// On hosts like Railway/Render, point PLANTMOOD_DATA_DIR at a persistent volume
-// so the SQLite database survives restarts and redeploys. Vercel functions have
-// a read-only deployment bundle; /tmp is their only writable location.
+// Plantmood stores everything in Supabase Postgres. The previous SQLite file
+// lived on the host's disk, which meant the owner's edits (prices, photos,
+// content) were destroyed whenever the container was replaced. Nothing here
+// touches the local filesystem any more.
 //
-// IMPORTANT: /tmp is ephemeral on Vercel. It keeps the storefront/API running
-// within a warm function instance, but is not a replacement for a persistent
-// database. Use PLANTMOOD_DATA_DIR on a host with a persistent disk for the
-// admin, orders and other owner-managed data.
-const DATA_DIR = process.env.PLANTMOOD_DATA_DIR
-  ? path.resolve(process.env.PLANTMOOD_DATA_DIR)
-  : process.env.VERCEL
-    ? path.join('/tmp', 'plantmood-data')
-    : path.join(__dirname, '..', 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-
-export const db = new DatabaseSync(path.join(DATA_DIR, 'plantmood.db'));
-
-db.exec(`
-  PRAGMA journal_mode = WAL;
-
-  CREATE TABLE IF NOT EXISTS categories (
-    slug TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    tagline TEXT DEFAULT '',
-    hero_image TEXT DEFAULT '',
-    sort INTEGER DEFAULT 0
+// DATABASE_URL comes from Supabase → Project Settings → Database. Use the
+// *transaction pooler* (port 6543) for serverless hosts like Vercel: each
+// function invocation gets a pooled connection instead of opening a new
+// Postgres backend.
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  throw new Error(
+    'DATABASE_URL is not set. Copy .env.example to .env and paste the Supabase ' +
+    'connection string (Project Settings → Database → Connection pooling).'
   );
-
-  CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    slug TEXT UNIQUE NOT NULL,
-    name TEXT NOT NULL,
-    species TEXT DEFAULT '',
-    description TEXT DEFAULT '',
-    care TEXT DEFAULT '',
-    price REAL NOT NULL,
-    category TEXT NOT NULL REFERENCES categories(slug),
-    image TEXT NOT NULL,
-    alt TEXT DEFAULT '',
-    stock INTEGER NOT NULL DEFAULT 5,
-    featured INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    order_no TEXT UNIQUE NOT NULL,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    phone TEXT DEFAULT '',
-    address1 TEXT NOT NULL,
-    address2 TEXT DEFAULT '',
-    city TEXT NOT NULL,
-    state TEXT NOT NULL,
-    postcode TEXT NOT NULL,
-    notes TEXT DEFAULT '',
-    subtotal REAL NOT NULL,
-    shipping REAL NOT NULL,
-    total REAL NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending',
-    token TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS order_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    order_id INTEGER NOT NULL REFERENCES orders(id),
-    product_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    price REAL NOT NULL,
-    qty INTEGER NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS subscribers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    subject TEXT DEFAULT '',
-    message TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS settings (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-  );
-
-  -- Admin-editable site content. Stores ONLY values the owner has overridden;
-  -- built-in defaults live in server/content.js so pages are never blank.
-  CREATE TABLE IF NOT EXISTS site_content (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL,
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-`);
-
-// --- migrations for databases created before a column existed ---
-for (const [table, column, def] of [['orders', 'token', "TEXT NOT NULL DEFAULT ''"]]) {
-  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
-  if (!cols.some(c => c.name === column)) {
-    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${def}`);
-  }
 }
 
-// --- settings helpers ---
-export function getSetting(key, fallback = null) {
-  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+// Transaction-mode pooling does not support prepared statements, so they are
+// disabled. The client is a module-level singleton so a warm serverless
+// instance reuses its connections instead of reconnecting per request.
+export const sql = postgres(DATABASE_URL, {
+  prepare: false,
+  max: Number(process.env.PLANTMOOD_DB_POOL || 5),
+  idle_timeout: 20,
+  connect_timeout: 15,
+});
+
+// --- schema -----------------------------------------------------------------
+// Runs once via `npm run migrate`, never on boot. Boot-time schema/seed work is
+// what silently reset the shop after a redeploy; keep it an explicit action.
+export async function migrate() {
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS categories (
+      slug TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      tagline TEXT NOT NULL DEFAULT '',
+      hero_image TEXT NOT NULL DEFAULT '',
+      sort INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS products (
+      id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+      slug TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      species TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      care TEXT NOT NULL DEFAULT '',
+      price NUMERIC(10,2) NOT NULL,
+      category TEXT NOT NULL REFERENCES categories(slug),
+      image TEXT NOT NULL,
+      alt TEXT NOT NULL DEFAULT '',
+      stock INTEGER NOT NULL DEFAULT 5,
+      featured INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS orders (
+      id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+      order_no TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL DEFAULT '',
+      address1 TEXT NOT NULL,
+      address2 TEXT NOT NULL DEFAULT '',
+      city TEXT NOT NULL,
+      state TEXT NOT NULL,
+      postcode TEXT NOT NULL,
+      notes TEXT NOT NULL DEFAULT '',
+      subtotal NUMERIC(10,2) NOT NULL,
+      shipping NUMERIC(10,2) NOT NULL,
+      total NUMERIC(10,2) NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      token TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS order_items (
+      id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+      order_id INTEGER NOT NULL REFERENCES orders(id),
+      product_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      price NUMERIC(10,2) NOT NULL,
+      qty INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS subscribers (
+      id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      subject TEXT NOT NULL DEFAULT '',
+      message TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    -- Admin-editable site content. Stores ONLY values the owner has overridden;
+    -- built-in defaults live in server/content.js so pages are never blank.
+    CREATE TABLE IF NOT EXISTS site_content (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+
+  await ensureDefaults();
+}
+
+// Values the app needs in order to run at all. Only ever fills in what is
+// missing, so re-running never overwrites the owner's settings.
+export async function ensureDefaults() {
+  if (!(await getSetting('admin_password'))) {
+    const initial = process.env.PLANTMOOD_ADMIN_PASSWORD || 'plantmood2026';
+    await setSetting('admin_password', hashPassword(initial));
+  }
+  if (!(await getSetting('shipping_flat'))) await setSetting('shipping_flat', '15');
+  if (!(await getSetting('free_shipping_over'))) await setSetting('free_shipping_over', '250');
+  // WhatsApp number that orders are sent to (international format, digits only,
+  // no +). Change this in Admin → Settings before going live.
+  if (!(await getSetting('whatsapp_number'))) await setSetting('whatsapp_number', '60123456789');
+}
+
+// --- settings helpers -------------------------------------------------------
+export async function getSetting(key, fallback = null) {
+  const [row] = await sql`SELECT value FROM settings WHERE key = ${key}`;
   return row ? row.value : fallback;
 }
 
-export function setSetting(key, value) {
-  db.prepare(
-    'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
-  ).run(key, String(value));
+export async function setSetting(key, value) {
+  await sql`
+    INSERT INTO settings (key, value) VALUES (${key}, ${String(value)})
+    ON CONFLICT (key) DO UPDATE SET value = excluded.value
+  `;
 }
 
-// --- site content overrides (see server/content.js for defaults) ---
-export function getContentOverrides() {
+// --- site content overrides (see server/content.js for defaults) ------------
+export async function getContentOverrides() {
   const out = {};
-  for (const row of db.prepare('SELECT key, value FROM site_content').all()) {
+  for (const row of await sql`SELECT key, value FROM site_content`) {
     out[row.key] = row.value;
   }
   return out;
 }
 
-export function getContentValue(key) {
-  const row = db.prepare('SELECT value FROM site_content WHERE key = ?').get(key);
+export async function getContentValue(key) {
+  const [row] = await sql`SELECT value FROM site_content WHERE key = ${key}`;
   return row ? row.value : null;
 }
 
-export function setContentValue(key, value) {
-  db.prepare(
-    `INSERT INTO site_content (key, value, updated_at) VALUES (?, ?, datetime('now'))
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
-  ).run(key, String(value));
+export async function setContentValue(key, value) {
+  await sql`
+    INSERT INTO site_content (key, value, updated_at)
+    VALUES (${key}, ${String(value)}, now())
+    ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+  `;
 }
 
-export function deleteContentValue(key) {
-  db.prepare('DELETE FROM site_content WHERE key = ?').run(key);
+export async function deleteContentValue(key) {
+  await sql`DELETE FROM site_content WHERE key = ${key}`;
 }
 
-// --- admin password (hashed) ---
+// --- admin password (hashed) ------------------------------------------------
 export function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
   const hash = crypto.scryptSync(password, salt, 32).toString('hex');
   return `${salt}:${hash}`;
@@ -165,12 +184,8 @@ export function verifyPassword(password, stored) {
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(candidate, 'hex'));
 }
 
-if (!getSetting('admin_password')) {
-  const initial = process.env.PLANTMOOD_ADMIN_PASSWORD || 'plantmood2026';
-  setSetting('admin_password', hashPassword(initial));
+// Postgres returns NUMERIC as a string to avoid float rounding surprises. The
+// API and storefront have always dealt in numbers, so convert at the boundary.
+export function num(v) {
+  return v === null || v === undefined ? v : Number(v);
 }
-if (!getSetting('shipping_flat')) setSetting('shipping_flat', '15');
-if (!getSetting('free_shipping_over')) setSetting('free_shipping_over', '250');
-// WhatsApp number that orders are sent to (international format, digits only, no +).
-// Change this in Admin → Settings before going live.
-if (!getSetting('whatsapp_number')) setSetting('whatsapp_number', '60123456789');
