@@ -4,18 +4,31 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe Supabase endpoints
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - run: npm ci
+      - name: Probe postgres connection
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          HOST=aws-0-ap-south-1.pooler.supabase.com
-          echo "--- DNS ---"
-          getent ahosts $HOST | head -5 || echo "no DNS"
-          echo "--- TCP 6543 (transaction pooler) ---"
-          timeout 20 bash -c "</dev/tcp/$HOST/6543" && echo OPEN || echo "BLOCKED/TIMEOUT"
-          echo "--- TCP 5432 (session pooler) ---"
-          timeout 20 bash -c "</dev/tcp/$HOST/5432" && echo OPEN || echo "BLOCKED/TIMEOUT"
-          echo "--- HTTPS to project (443) ---"
-          curl -s -o /dev/null -w "REST %{http_code}\n" -m 20 "$SUPABASE_URL/rest/v1/" || echo "https failed"
-          echo "--- runner egress IP ---"
-          curl -s -m 20 https://api.ipify.org || true; echo
+          node -e '
+          const postgres=require("postgres");
+          const u=process.env.DATABASE_URL||"";
+          const m=/^postgresql:\/\/([^:]+):([^@]*)@([^:]+):(\d+)\/(.+)$/.exec(u);
+          console.log("secret present:", !!u, "len:", u.length);
+          if(!m){console.log("PARSE FAILED. starts:", u.slice(0,20));process.exit(1)}
+          console.log("user:",m[1],"host:",m[3],"port:",m[4],"db:",m[5],"pwlen:",m[2].length);
+          (async()=>{
+            for (const opts of [
+              {label:"default",       cfg:{prepare:false,connect_timeout:20,max:1}},
+              {label:"ssl:require",   cfg:{prepare:false,connect_timeout:20,max:1,ssl:"require"}},
+              {label:"ssl:no-verify", cfg:{prepare:false,connect_timeout:20,max:1,ssl:{rejectUnauthorized:false}}},
+            ]) {
+              const sql=postgres(u,opts.cfg);
+              try{ const r=await sql`select 1 as ok`; console.log("✓",opts.label,"->",JSON.stringify(r[0])); await sql.end(); process.exit(0) }
+              catch(e){ console.log("✗",opts.label,"->",e.code||"",e.message.slice(0,90)); try{await sql.end({timeout:1})}catch{} }
+            }
+            process.exit(1)
+          })();
+          '
