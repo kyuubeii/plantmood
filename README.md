@@ -186,6 +186,26 @@ Any host works now — there is no persistent-disk requirement.
 5. Run `npm run migrate` once against the production database.
 6. In **Admin → Settings**, set your **WhatsApp number** (orders are sent there) and delivery fees.
 
+### Deploys are blocked by an unrecognised commit author
+
+Vercel refuses a Git deployment when the commit author's email is not one it can
+match to an account:
+
+```
+The deployment was blocked because the commit author email
+(oscar@Oscars-MacBook-Pro.local) is not valid.
+```
+
+That address is what git invents when `user.email` was never configured, so the
+fix is to set a real one and make the next commit with it:
+
+```bash
+git config --global user.email "you@example.com"   # the address on your GitHub/Vercel account
+git config --global user.name  "Your Name"
+```
+
+Existing commits keep the old author; only new ones are checked.
+
 Notes: the platform provides `PORT` automatically. Admin login sessions live in memory, so they
 reset on redeploy (just log in again).
 
