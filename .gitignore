@@ -19,3 +19,6 @@ public/images/uploads/
 .env.local
 .vercel
 .env*
+
+# CSV exports (contain customer data — never commit)
+exports/

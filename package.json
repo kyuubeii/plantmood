@@ -15,7 +15,9 @@
     "restore": "node --env-file-if-exists=.env scripts/restore.js",
     "tutorial:screenshots": "node scripts/capture-tutorial-screenshots.js",
     "tutorial:pdf": "node scripts/build-tutorial-pdf.js",
-    "generate:tutorial": "npm run tutorial:screenshots && npm run tutorial:pdf"
+    "generate:tutorial": "npm run tutorial:screenshots && npm run tutorial:pdf",
+    "export:csv": "node --env-file-if-exists=.env scripts/export-csv.js",
+    "import:csv": "node --env-file-if-exists=.env scripts/import-csv.js"
   },
   "engines": {
     "node": ">=24"

@@ -107,6 +107,41 @@ deployment.
 Also worth checking: a free-tier Supabase project **auto-pauses after 7 days of
 inactivity**, which takes the shop down until it is resumed from the dashboard.
 
+## Spreadsheet export / import (CSV)
+
+```bash
+npm run export:csv                                    # -> ./exports/*.csv
+npm run import:csv -- ./exports/products-<date>.csv --dry-run
+npm run import:csv -- ./exports/products-<date>.csv
+```
+
+Exports products, categories, site content, orders and order items as CSV you
+can open in Excel or Google Sheets. The same files import back, so this doubles
+as bulk editing: change a column of prices in a spreadsheet and apply it.
+
+The daily backup includes these CSVs in its encrypted artifact, so a snapshot
+can always be read or repaired by a person, not only by `npm run restore`.
+
+Safety rules the importer follows:
+
+- **Nothing is ever deleted.** Rows are upserted by `slug` / `key`; a row you
+  remove from the spreadsheet is left untouched in the database, so deleting
+  lines in Excel cannot wipe the shop. Delete products in the admin panel.
+- **All-or-nothing validation.** Non-numeric prices, negative prices and empty
+  slugs are reported and the whole import is refused — a half-applied price
+  list is worse than a rejected one.
+- **Blank cells keep the current value** rather than erasing it.
+- **Orders are export-only.** They are financial records; a restore should not
+  rewrite them from a spreadsheet.
+- `--dry-run` prints the exact before/after of every change first. Use it.
+
+`image` holds the photo's *path*, not the photo. A CSV import restores every
+price and word, but photos themselves live in Supabase Storage — recover those
+with `npm run import:uploads` or by re-uploading in the admin panel.
+
+CSV exports of orders contain customer names, phone numbers and addresses.
+`exports/` is git-ignored; keep the files off shared drives.
+
 ## Restoring data from an old SQLite database
 
 ```bash

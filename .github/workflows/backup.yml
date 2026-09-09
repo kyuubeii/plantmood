@@ -34,7 +34,11 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: npm run backup -- --local ./_snapshot
+        run: |
+          npm run backup -- --local ./_snapshot
+          # Spreadsheet copies alongside the JSON: a person can read and repair
+          # these, and `npm run import:csv` puts them back.
+          npm run export:csv -- ./_snapshot
 
       - name: Encrypt snapshot
         env:
@@ -45,7 +49,7 @@ jobs:
             echo "::error::snapshot — this repository is public and snapshots contain customer data."
             exit 1
           fi
-          for f in ./_snapshot/*.json; do
+          for f in ./_snapshot/*.json ./_snapshot/*.csv; do
             openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt \
               -in "$f" -out "$f.enc" -pass env:BACKUP_PASSPHRASE
             rm "$f"          # never let the plaintext reach the artifact
