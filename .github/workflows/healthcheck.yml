@@ -1,0 +1,73 @@
+name: Health check
+
+# The shop was broken for two weeks without anyone noticing: a database password
+# was rotated and never propagated, so every page loaded but no product ever
+# appeared. This job checks what a customer actually sees and opens a GitHub
+# issue the same day if the storefront stops serving products.
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the storefront
+        id: probe
+        run: |
+          URL=https://plantmood.vercel.app
+          fail() { echo "reason=$1" >> "$GITHUB_OUTPUT"; echo "::error::$1"; exit 1; }
+
+          CODE=$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$URL/") || fail "Homepage unreachable"
+          [ "$CODE" = "200" ] || fail "Homepage returned HTTP $CODE"
+
+          BODY=$(curl -s -m 30 "$URL/api/products") || fail "Products API unreachable"
+          # The failure mode that went unnoticed: HTTP 200 with an error body.
+          case "$BODY" in
+            '['*) ;;
+            *) fail "Products API did not return a list: $(printf '%s' "$BODY" | head -c 120)" ;;
+          esac
+
+          COUNT=$(printf '%s' "$BODY" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{console.log(JSON.parse(d).length)}catch{console.log(0)}})")
+          [ "$COUNT" -gt 0 ] || fail "Storefront is serving 0 products"
+          echo "OK — $COUNT products live"
+
+      - name: Open an issue if the shop is down
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REASON: ${{ steps.probe.outputs.reason }}
+        run: |
+          TITLE="🔴 Plantmood storefront is down"
+          # Reuse the open issue instead of filing a new one every 6 hours.
+          EXISTING=$(gh issue list --state open --label outage --json number -q '.[0].number' || true)
+          BODY="Automated check failed at $(date -u '+%Y-%m-%d %H:%M UTC').
+
+**Reason:** ${REASON:-see workflow log}
+
+Most likely causes, in the order they have actually happened before:
+1. The Supabase database password was rotated but not updated in **all three**
+   places: local \`.env\`, Vercel env vars, GitHub secrets.
+2. The Supabase project was auto-paused (free tier pauses after 7 days idle).
+3. A bad deploy.
+
+Run: \`gh run view --log\` on this run for the exact error."
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --label outage --body "$BODY"
+          fi
+
+      - name: Close the outage issue once healthy
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for N in $(gh issue list --state open --label outage --json number -q '.[].number'); do
+            gh issue comment "$N" --body "✅ Storefront is healthy again as of $(date -u '+%Y-%m-%d %H:%M UTC'). Closing automatically."
+            gh issue close "$N"
+          done

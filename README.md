@@ -55,8 +55,57 @@ products (which would mean bad credentials, and would rotate good snapshots out)
 Restores are additive: rows are upserted by slug / key / order_no and nothing is
 deleted, so restoring recovers what was lost without discarding newer work.
 
-The workflow needs three repository secrets (Settings → Secrets and variables →
-Actions): `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`.
+Snapshots are written to **two** places, because the bucket lives in the same
+Supabase project as the data it protects — delete or lose that project and the
+backups go with it:
+
+1. the private `plantmood-backups` bucket (30 days)
+2. an **encrypted** GitHub Actions artifact named `plantmood-snapshot` (90 days)
+
+The artifact is encrypted with AES-256 because this repository is public, and
+artifacts of public repos are publicly downloadable. To read one:
+
+```bash
+gh run download --name plantmood-snapshot          # writes plantmood-<stamp>.json.enc
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+  -in plantmood-<stamp>.json.enc -out snapshot.json -pass env:BACKUP_PASSPHRASE
+npm run restore -- ./snapshot.json --dry-run
+```
+
+**Losing `BACKUP_PASSPHRASE` makes every artifact permanently unreadable.** It is
+in `.env` and in the repository secrets; keep a third copy in a password manager.
+
+Repository secrets needed (Settings → Secrets and variables → Actions):
+`DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `BACKUP_PASSPHRASE`.
+
+## Monitoring
+
+`.github/workflows/healthcheck.yml` checks the live storefront every 6 hours and
+opens a GitHub issue (label `outage`) if it stops serving products, closing it
+again once the shop recovers.
+
+It deliberately checks the **product list**, not just that the page loads: the
+two-week outage in September 2026 served HTTP 200 on every page while
+`/api/products` returned an error, so an uptime check would have reported
+everything as fine.
+
+### If the health check fires
+
+The cause has twice been credentials drifting out of sync. `DATABASE_URL` lives
+in **three** places and rotating the database password means updating all of
+them:
+
+| Where | How |
+|---|---|
+| local | `.env` |
+| Vercel | `vercel env rm DATABASE_URL production` then `vercel env add` (pass the value via a file — piping truncates it) |
+| GitHub | `gh secret set DATABASE_URL` |
+
+Then `vercel redeploy <last-good-url>` — env changes only take effect on a new
+deployment.
+
+Also worth checking: a free-tier Supabase project **auto-pauses after 7 days of
+inactivity**, which takes the shop down until it is resumed from the dashboard.
 
 ## Restoring data from an old SQLite database
 

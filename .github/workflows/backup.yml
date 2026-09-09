@@ -1,13 +1,21 @@
 name: Daily backup
 
-# Snapshots the shop (products, prices, content, orders, settings) into the
-# private Supabase Storage bucket. Nothing is written back to this repository —
-# the repo is public and snapshots contain customer personal data.
+# Snapshots the shop (products, prices, content, orders, settings) to two places:
+#   1. the private Supabase Storage bucket
+#   2. an ENCRYPTED GitHub artifact, kept 90 days
+#
+# Two copies because the bucket lives in the same Supabase project as the data
+# it protects — if that project is deleted, the bucket goes with it. The
+# artifact survives anything that happens to Supabase.
+#
+# The artifact is encrypted because this repository is PUBLIC, and artifacts of
+# public repos are publicly downloadable. Snapshots contain customer names,
+# phone numbers and addresses, so an unencrypted artifact would leak them.
 on:
   schedule:
     # 18:00 UTC = 02:00 Asia/Kuala_Lumpur — after the shop's day is over.
     - cron: '0 18 * * *'
-  workflow_dispatch: {}  # lets you run it by hand from the Actions tab
+  workflow_dispatch: {}
 
 jobs:
   backup:
@@ -26,4 +34,28 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: npm run backup
+        run: npm run backup -- --local ./_snapshot
+
+      - name: Encrypt snapshot
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::BACKUP_PASSPHRASE is not set. Refusing to upload an unencrypted"
+            echo "::error::snapshot — this repository is public and snapshots contain customer data."
+            exit 1
+          fi
+          for f in ./_snapshot/*.json; do
+            openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt \
+              -in "$f" -out "$f.enc" -pass env:BACKUP_PASSPHRASE
+            rm "$f"          # never let the plaintext reach the artifact
+          done
+          ls -la ./_snapshot
+
+      - name: Upload encrypted artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plantmood-snapshot
+          path: ./_snapshot/*.enc
+          retention-days: 90
+          if-no-files-found: error
