@@ -1,27 +1,34 @@
-// Restores a snapshot produced by scripts/backup.js.
+// Restores a snapshot produced by scripts/backup.js or downloaded from
+// Settings → Backup & restore.
 //
 //   npm run backup -- --list                       # find the snapshot you want
 //   npm run restore -- <name-or-path> --dry-run    # always preview first
 //   npm run restore -- <name-or-path>
+//   npm run restore -- <name-or-path> --include-password
 //
 // The argument is either a local .json file or the name of a snapshot in the
 // private backup bucket, which is downloaded automatically.
 //
-// Rows are upserted by natural key (slug / key / order_no) and nothing is
-// deleted, so restoring is additive: it puts back what was lost without
-// discarding anything created since the snapshot was taken.
+// Rows are upserted by natural key and nothing is deleted, so restoring is
+// additive: it puts back what was lost without discarding anything created
+// since. The logic is shared with the admin panel (server/backup.js).
+//
+// The admin password is NOT restored unless --include-password is given:
+// putting back the password from the snapshot's date can lock you out.
 import fs from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { sql } from '../server/db.js';
+import { analyseSnapshot, applySnapshot } from '../server/backup.js';
 
 const BUCKET = process.env.SUPABASE_BACKUP_BUCKET || 'plantmood-backups';
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
+const includeAdminPassword = args.includes('--include-password');
 const target = args.find(a => !a.startsWith('--'));
 
 if (!target) {
-  console.error('Usage: npm run restore -- <snapshot.json | snapshot-name-in-bucket> [--dry-run]');
+  console.error('Usage: npm run restore -- <snapshot.json | name-in-bucket> [--dry-run] [--include-password]');
   process.exit(1);
 }
 
@@ -43,74 +50,25 @@ if (fs.existsSync(path.resolve(target))) {
   console.log(`Downloaded ${target} from "${BUCKET}"`);
 }
 
-const snap = JSON.parse(body);
-console.log(`Snapshot taken at ${snap.takenAt}`);
-console.log(`  ${snap.products?.length || 0} products, ${snap.orders?.length || 0} orders, ` +
-            `${snap.site_content?.length || 0} content overrides`);
+let snap;
+try { snap = JSON.parse(body); }
+catch { console.error('That file is not valid JSON.'); process.exit(1); }
 
-const q = (id) => '"' + String(id).replace(/"/g, '""') + '"';
-
-async function upsert(table, rows, conflictKey) {
-  if (!rows?.length) { console.log(`- ${table}: nothing in snapshot`); return; }
-  if (dryRun) { console.log(`- ${table}: would restore ${rows.length} row(s)`); return; }
-  // Restore only columns the live schema still has, so an older snapshot
-  // (taken before a column was added or removed) still applies.
-  const live = (await sql`
-    SELECT column_name FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = ${table}
-  `).map(r => r.column_name);
-  const cols = Object.keys(rows[0]).filter(c => live.includes(c));
-  const updatable = cols.filter(c => c !== conflictKey && c !== 'id');
-
-  for (const row of rows) {
-    let stmt = `INSERT INTO ${q(table)} (${cols.map(q).join(', ')}) ` +
-               `VALUES (${cols.map((_, i) => '$' + (i + 1)).join(', ')})`;
-    stmt += updatable.length
-      ? ` ON CONFLICT (${q(conflictKey)}) DO UPDATE SET ` +
-        updatable.map(c => `${q(c)} = excluded.${q(c)}`).join(', ')
-      : ` ON CONFLICT (${q(conflictKey)}) DO NOTHING`;
-    await sql.unsafe(stmt, cols.map(c => row[c] ?? null));
-  }
-  console.log(`- ${table}: restored ${rows.length} row(s)`);
+const opts = { includeAdminPassword };
+let report;
+try {
+  report = dryRun ? await analyseSnapshot(snap, opts) : await applySnapshot(snap, opts);
+} catch (e) {
+  console.error(e.message);
+  process.exit(1);
 }
 
-await upsert('categories', snap.categories, 'slug');
-await upsert('products', snap.products, 'slug');
-await upsert('settings', snap.settings, 'key');
-await upsert('site_content', snap.site_content, 'key');
-await upsert('subscribers', snap.subscribers, 'email');
-await upsert('orders', snap.orders, 'order_no');
-
-// order_items has no natural key; re-insert only for orders that currently have
-// none, so a repeated restore cannot duplicate an order's lines.
-if (snap.order_items?.length && !dryRun) {
-  const idByNo = new Map((await sql`SELECT id, order_no FROM orders`).map(r => [r.order_no, r.id]));
-  const noById = new Map((snap.orders || []).map(o => [o.id, o.order_no]));
-  const withItems = new Set((await sql`SELECT DISTINCT order_id FROM order_items`).map(r => r.order_id));
-  let n = 0;
-  for (const it of snap.order_items) {
-    const liveId = idByNo.get(noById.get(it.order_id));
-    if (!liveId || withItems.has(liveId)) continue;
-    await sql`
-      INSERT INTO order_items (order_id, product_id, name, price, qty)
-      VALUES (${liveId}, ${it.product_id}, ${it.name}, ${it.price}, ${it.qty})
-    `;
-    n++;
-  }
-  console.log(`- order_items: restored ${n} line(s)`);
-} else if (snap.order_items?.length) {
-  console.log(`- order_items: would restore up to ${snap.order_items.length} line(s)`);
+console.log(`Snapshot taken at ${report.takenAt || 'unknown time'}${dryRun ? '  (dry run — nothing will be written)' : ''}\n`);
+for (const t of report.tables) {
+  if (!t.total) { console.log(`- ${t.table}: nothing in snapshot`); continue; }
+  console.log(`- ${t.table}: ${t.creates} new, ${t.updates} changed, ${t.unchanged} unchanged  (of ${t.total})`);
 }
+for (const s of report.skipped) console.log(`  note: skipped ${s}`);
 
-if (!dryRun) {
-  for (const t of ['products', 'orders', 'order_items', 'subscribers', 'messages']) {
-    await sql.unsafe(
-      `SELECT setval(pg_get_serial_sequence('${t}', 'id'), COALESCE((SELECT MAX(id) FROM ${t}), 1))`
-    );
-  }
-  console.log('\nRestore complete.');
-} else {
-  console.log('\nDry run — nothing was written.');
-}
-
+console.log(dryRun ? '\nDry run — nothing was written.' : '\nRestore complete.');
 await sql.end();

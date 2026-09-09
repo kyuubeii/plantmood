@@ -624,13 +624,14 @@
           <div id="backup-downloads" class="muted">Loading&hellip;</div>
 
           <div class="spacer-s"></div>
-          <h5 style="margin:1.4rem 0 0.5rem;">Restore from a spreadsheet</h5>
+          <h5 style="margin:1.4rem 0 0.5rem;">Restore from a backup file</h5>
           <p class="muted" style="font-size:0.95rem;margin:0 0 0.8rem;">
-            Nothing is deleted: rows are matched by name and updated, and anything you
-            removed from the spreadsheet is left alone. You will see exactly what
-            changes before anything is saved.
+            Takes either a <strong>.json</strong> backup (restores the whole shop) or a
+            <strong>.csv</strong> spreadsheet (one section). Nothing is deleted: rows are
+            matched and updated, and anything missing from the file is left alone. You
+            will see exactly what changes before anything is saved.
           </p>
-          <input type="file" id="restore-file" accept=".csv,text/csv">
+          <input type="file" id="restore-file" accept=".csv,.json,text/csv,application/json">
           <button class="btn btn--small" id="restore-preview" type="button" style="margin-left:0.6rem;" disabled>Preview changes</button>
           <div id="restore-out" style="margin-top:1rem;"></div>
         </div>`;
@@ -743,11 +744,65 @@
         const f = file.files[0];
         if (!f) return;
         if (f.size > 10 * 1024 * 1024) { out.innerHTML = '<p class="form-msg error">That file is larger than 10 MB.</p>'; return; }
+        if (!/\.(csv|json)$/i.test(f.name)) {
+          out.innerHTML = '<p class="form-msg error">Please choose a .json backup or a .csv spreadsheet.</p>';
+          return;
+        }
         csvText = await f.text();
         previewBtn.disabled = false;
       };
 
       const esc = PM.esc;
+      const SECTION = {
+        products: 'Products & prices', categories: 'Categories',
+        site_content: 'Website text & photos', settings: 'Shop settings',
+        subscribers: 'Newsletter subscribers', orders: 'Orders', order_items: 'Order line items',
+      };
+
+      const renderSnapshotReport = (r, applied) => {
+        const rows = r.tables.filter(t => t.total).map(t => `
+          <tr>
+            <td>${esc(SECTION[t.table] || t.table)}</td>
+            <td class="muted">${t.creates} new, ${t.updates} changed, ${t.unchanged} unchanged</td>
+          </tr>`).join('');
+        const nothing = r.tables.every(t => !t.creates && !t.updates);
+        out.innerHTML = `
+          <p class="${applied ? 'form-msg' : 'muted'}">
+            ${applied ? '✅ Restored from ' : 'Backup from '}
+            <strong>${esc((r.takenAt || '').slice(0, 16).replace('T', ' '))}</strong>
+          </p>
+          ${rows ? `<table class="admin-table"><tbody>${rows}</tbody></table>` : ''}
+          ${r.skipped && r.skipped.length
+            ? `<ul class="muted" style="font-size:0.9rem;margin-top:0.8rem;">${r.skipped.map(x => `<li>Not restored: ${esc(x)}</li>`).join('')}</ul>`
+            : ''}
+          <p class="muted" style="font-size:0.9rem;">Photos are not inside a backup file — they stay in storage.</p>
+          ${!applied && !nothing
+            ? '<button class="btn btn--solid btn--small" type="button" id="restore-apply" style="margin-top:0.6rem;">Restore everything</button>'
+            : (!applied ? '<p class="muted">Everything already matches this backup — nothing to restore.</p>' : '')}`;
+        wireApply(r, () => {
+          const changed = r.tables.reduce((n, t) => n + t.creates + t.updates, 0);
+          return `Restore ${changed} row(s) from the backup taken ${(r.takenAt || '').slice(0, 10)}?`;
+        });
+      };
+
+      const wireApply = (r, confirmText) => {
+        const applyBtn = document.getElementById('restore-apply');
+        if (!applyBtn) return;
+        applyBtn.onclick = async () => {
+          if (!confirm(confirmText())) return;
+          applyBtn.disabled = true; applyBtn.textContent = 'Restoring…';
+          try {
+            const res = await authed('/api/admin/restore', { method: 'POST', body: { file: csvText, apply: true } });
+            (res.kind === 'snapshot' ? renderSnapshotReport : renderReport)(res, true);
+            PM.toast('Restored');
+            // a restore can add categories, so refresh the list the product form uses
+            CATS = await PM.api('/api/categories').catch(() => CATS);
+          } catch (err) {
+            out.innerHTML = `<p class="form-msg error">${esc(err.message)}</p>`;
+          }
+        };
+      };
+
       const renderReport = (r, applied) => {
         if (r.problems && r.problems.length) {
           out.innerHTML = `<p class="form-msg error">Nothing was changed — this file has ${r.problems.length} problem(s):</p>
@@ -771,25 +826,14 @@
             ? '<button class="btn btn--solid btn--small" type="button" id="restore-apply" style="margin-top:1rem;">Apply these changes</button>'
             : (!applied ? '<p class="muted">Nothing to apply.</p>' : '')}`;
 
-        const applyBtn = document.getElementById('restore-apply');
-        if (applyBtn) applyBtn.onclick = async () => {
-          if (!confirm(`Apply ${r.creates} new and ${r.updates} changed row(s) to “${r.table}”?`)) return;
-          applyBtn.disabled = true; applyBtn.textContent = 'Restoring…';
-          try {
-            const res = await authed('/api/admin/restore', { method: 'POST', body: { csv: csvText, apply: true } });
-            renderReport(res, true);
-            PM.toast('Restored');
-          } catch (err) {
-            out.innerHTML = `<p class="form-msg error">${esc(err.message)}</p>`;
-          }
-        };
+        wireApply(r, () => `Apply ${r.creates} new and ${r.updates} changed row(s) to “${r.table}”?`);
       };
 
       previewBtn.onclick = async () => {
         previewBtn.disabled = true; previewBtn.textContent = 'Checking…';
         try {
-          const r = await authed('/api/admin/restore', { method: 'POST', body: { csv: csvText, apply: false } });
-          renderReport(r, false);
+          const r = await authed('/api/admin/restore', { method: 'POST', body: { file: csvText, apply: false } });
+          (r.kind === 'snapshot' ? renderSnapshotReport : renderReport)(r, false);
         } catch (err) {
           out.innerHTML = `<p class="form-msg error">${esc(err.message)}</p>`;
         } finally {

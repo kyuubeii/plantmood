@@ -7,7 +7,7 @@ import {
   getContentOverrides, getContentValue, setContentValue, deleteContentValue,
 } from './db.js';
 import { saveUploadedImage, removeUploadedImage, publicUrl } from './storage.js';
-import { snapshot, exportCsv, analyseCsv, applyCsv, CSV_TABLES } from './backup.js';
+import { snapshot, exportCsv, analyseCsv, applyCsv, analyseSnapshot, applySnapshot, CSV_TABLES } from './backup.js';
 import { CONTENT_REGISTRY, contentByKey } from './content.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -498,30 +498,43 @@ app.get('/api/admin/backup/tables', adminAuth, ah(async (req, res) => {
 // Restore runs in two steps so nothing is written until the owner has seen
 // exactly what would change: preview first, then apply the same file.
 app.post('/api/admin/restore', adminAuth, ah(async (req, res) => {
-  const text = String(req.body.csv || '');
+  // Accepts either a full .json snapshot or a single-table .csv. `csv` is the
+  // historical field name; `file` is the one the panel sends now.
+  const text = String(req.body.file ?? req.body.csv ?? '');
   const apply = req.body.apply === true;
   if (!text.trim()) return res.status(400).json({ error: 'That file is empty.' });
 
-  let result;
+  // A snapshot starts with '{'; anything else is treated as a spreadsheet.
+  const looksJson = text.trimStart().startsWith('{');
+
   try {
-    result = apply ? await applyCsv(text) : await analyseCsv(text);
+    if (looksJson) {
+      let snap;
+      try { snap = JSON.parse(text); }
+      catch { return res.status(400).json({ error: 'That .json file is damaged and could not be read.' }); }
+      // The admin password is never restored through the panel — it would put
+      // back the password from the snapshot's date and lock the owner out.
+      const report = apply ? await applySnapshot(snap) : await analyseSnapshot(snap);
+      return res.json({ kind: 'snapshot', applied: apply, ...report });
+    }
+
+    const result = apply ? await applyCsv(text) : await analyseCsv(text);
+    return res.json({
+      kind: 'csv',
+      applied: apply,
+      table: result.table,
+      total: result.rows.length,
+      creates: result.creates,
+      updates: result.updates,
+      unchanged: result.unchanged,
+      ignored: result.ignored,
+      problems: result.problems,
+      changes: result.changes.slice(0, 50),
+      truncated: Math.max(0, result.changes.length - 50),
+    });
   } catch (e) {
     return res.status(400).json({ error: e.message, problems: e.problems });
   }
-  res.json({
-    applied: apply,
-    table: result.table,
-    total: result.rows.length,
-    creates: result.creates,
-    updates: result.updates,
-    unchanged: result.unchanged,
-    ignored: result.ignored,
-    problems: result.problems,
-    // Enough detail for the owner to recognise a mistake, not so much that a
-    // 55-row diff becomes unreadable.
-    changes: result.changes.slice(0, 50),
-    truncated: Math.max(0, result.changes.length - 50),
-  });
 }));
 
 // ------- site content (editable text & images) -------

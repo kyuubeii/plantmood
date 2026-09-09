@@ -113,12 +113,22 @@ inactivity**, which takes the shop down until it is resumed from the dashboard.
 
 - **Download everything (.json)** — one file, the same shape the nightly job stores
 - **Download .csv** per table — products & prices, categories, site text, orders
-- **Restore from a spreadsheet** — pick a CSV, see exactly what would change, then apply
+- **Restore from a backup file** — a `.json` backup restores the whole shop; a
+  `.csv` restores one section
 
-Restoring is two steps on purpose: the preview lists every row that would be
-added or changed, field by field with before → after, and nothing is written
-until that is confirmed. The panel and the CLI share `server/backup.js`, so the
-safety rules below hold identically in both.
+Restoring is two steps on purpose: the preview lists what would change — per
+section for a `.json` backup, and field by field with before → after for a
+`.csv` — and nothing is written until that is confirmed. The panel and the CLI
+share `server/backup.js`, so the safety rules below hold identically in both.
+
+Two things a `.json` restore deliberately leaves alone:
+
+- **The admin password.** It lives in `settings`, and restoring it would put
+  back whatever password was in force when the backup was taken — locking you
+  out of the panel you are standing in. Use `npm run restore -- <file>
+  --include-password` if you actually want it back (e.g. after a total wipe).
+- **Contact messages.** They have no unique key, so re-importing them would
+  create duplicates on every restore.
 
 Downloads go through `fetch` and a Blob rather than a plain link, because every
 admin request needs the `x-admin-token` header that a link cannot send.

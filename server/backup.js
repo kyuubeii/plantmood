@@ -157,3 +157,150 @@ export async function applyCsv(text) {
   });
   return a;
 }
+
+// --- snapshot restore -------------------------------------------------------
+// Tables a snapshot puts back, and the key each row is matched on. Nothing is
+// deleted here either: a row missing from the snapshot stays in the database.
+const SNAPSHOT_TABLES = [
+  ['categories',   'slug'],
+  ['products',     'slug'],
+  ['site_content', 'key'],
+  ['settings',     'key'],
+  ['subscribers',  'email'],
+  ['orders',       'order_no'],
+];
+
+// The admin password hash lives in `settings`. Restoring it would silently put
+// back whatever password was in force when the snapshot was taken, locking the
+// owner out of the panel they are standing in. The admin panel therefore never
+// restores it; `npm run restore` can, with --include-password.
+export const ADMIN_PASSWORD_KEY = 'admin_password';
+
+function rowsOf(snap, table) {
+  const r = snap[table];
+  return Array.isArray(r) ? r : [];
+}
+
+
+// JSON round-trips lose type fidelity: NUMERIC comes back as "135.00" where the
+// live row holds 135, and TIMESTAMPTZ becomes an ISO string where the live row
+// is a Date. Comparing those as text marks every row as changed, which turns
+// the restore preview — the screen someone reads before overwriting their shop
+// — into noise. Compare by value instead.
+function sameValue(a, b) {
+  if (a === b) return true;
+  if (a === null || a === undefined || a === '') return b === null || b === undefined || b === '';
+  if (b === null || b === undefined || b === '') return false;
+  const na = Number(a), nb = Number(b);
+  if (Number.isFinite(na) && Number.isFinite(nb) && String(a).trim() !== '' && String(b).trim() !== '') return na === nb;
+  if (a instanceof Date || b instanceof Date) {
+    const ta = new Date(a).getTime(), tb = new Date(b).getTime();
+    if (Number.isFinite(ta) && Number.isFinite(tb)) return ta === tb;
+  }
+  return String(a).trim() === String(b).trim();
+}
+
+export async function analyseSnapshot(snap, { includeAdminPassword = false } = {}) {
+  if (!snap || typeof snap !== 'object' || !Array.isArray(snap.products)) {
+    throw new Error('That file is not a Plantmood backup.');
+  }
+  const report = { takenAt: snap.takenAt || null, tables: [], skipped: [] };
+
+  for (const [table, key] of SNAPSHOT_TABLES) {
+    let rows = rowsOf(snap, table);
+    if (table === 'settings' && !includeAdminPassword) {
+      const before = rows.length;
+      rows = rows.filter(r => r.key !== ADMIN_PASSWORD_KEY);
+      if (rows.length < before) report.skipped.push('the admin password (you stay logged in with your current one)');
+    }
+    if (!rows.length) { report.tables.push({ table, total: 0, creates: 0, updates: 0, unchanged: 0 }); continue; }
+
+    const live = (await sql`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = ${table}
+    `).map(r => r.column_name);
+    const cols = Object.keys(rows[0]).filter(c => live.includes(c));
+    const existing = new Map((await sql.unsafe(`SELECT * FROM "${table}"`)).map(r => [String(r[key]), r]));
+
+    let creates = 0, updates = 0, unchanged = 0;
+    for (const r of rows) {
+      const cur = existing.get(String(r[key]));
+      if (!cur) { creates++; continue; }
+      const differs = cols.some(c => c !== key && c !== 'id' && !sameValue(cur[c], r[c]));
+      differs ? updates++ : unchanged++;
+    }
+    report.tables.push({ table, total: rows.length, creates, updates, unchanged, cols });
+  }
+
+  // order_items carry no natural key, so they are only re-inserted for orders
+  // that currently have none — a repeated restore cannot duplicate them.
+  const items = rowsOf(snap, 'order_items');
+  if (items.length) {
+    const withItems = new Set((await sql`SELECT DISTINCT order_id FROM order_items`).map(r => r.order_id));
+    const idByNo = new Map((await sql`SELECT id, order_no FROM orders`).map(r => [r.order_no, r.id]));
+    const noById = new Map(rowsOf(snap, 'orders').map(o => [o.id, o.order_no]));
+    const restorable = items.filter(it => {
+      const liveId = idByNo.get(noById.get(it.order_id));
+      return !liveId || !withItems.has(liveId);   // orders not yet created count too
+    }).length;
+    report.tables.push({ table: 'order_items', total: items.length, creates: restorable, updates: 0, unchanged: items.length - restorable });
+  }
+
+  if (rowsOf(snap, 'messages').length) {
+    report.skipped.push(`${rowsOf(snap, 'messages').length} contact message(s) — they have no unique key, so restoring them would create duplicates`);
+  }
+  return report;
+}
+
+export async function applySnapshot(snap, { includeAdminPassword = false } = {}) {
+  const report = await analyseSnapshot(snap, { includeAdminPassword });
+  const q = (id) => '"' + String(id).replace(/"/g, '""') + '"';
+
+  await sql.begin(async (tx) => {
+    for (const [table, key] of SNAPSHOT_TABLES) {
+      let rows = rowsOf(snap, table);
+      if (table === 'settings' && !includeAdminPassword) rows = rows.filter(r => r.key !== ADMIN_PASSWORD_KEY);
+      if (!rows.length) continue;
+
+      const live = (await tx`
+        SELECT column_name FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = ${table}
+      `).map(r => r.column_name);
+      // `id` is kept so order_items can be re-linked and ids stay stable.
+      const cols = Object.keys(rows[0]).filter(c => live.includes(c));
+      const updatable = cols.filter(c => c !== key && c !== 'id');
+
+      for (const r of rows) {
+        const stmt = `INSERT INTO ${q(table)} (${cols.map(q).join(', ')}) ` +
+          `VALUES (${cols.map((_, i) => '$' + (i + 1)).join(', ')}) ` +
+          (updatable.length
+            ? `ON CONFLICT (${q(key)}) DO UPDATE SET ` + updatable.map(c => `${q(c)} = excluded.${q(c)}`).join(', ')
+            : `ON CONFLICT (${q(key)}) DO NOTHING`);
+        await tx.unsafe(stmt, cols.map(c => r[c] ?? null));
+      }
+    }
+
+    const items = rowsOf(snap, 'order_items');
+    if (items.length) {
+      const withItems = new Set((await tx`SELECT DISTINCT order_id FROM order_items`).map(r => r.order_id));
+      const idByNo = new Map((await tx`SELECT id, order_no FROM orders`).map(r => [r.order_no, r.id]));
+      const noById = new Map(rowsOf(snap, 'orders').map(o => [o.id, o.order_no]));
+      for (const it of items) {
+        const liveId = idByNo.get(noById.get(it.order_id));
+        if (!liveId || withItems.has(liveId)) continue;
+        await tx`INSERT INTO order_items (order_id, product_id, name, price, qty)
+                 VALUES (${liveId}, ${it.product_id}, ${it.name}, ${it.price}, ${it.qty})`;
+      }
+    }
+
+    // Keep identity sequences ahead of the ids just inserted, or the next
+    // INSERT collides with a restored row.
+    for (const t of ['products', 'orders', 'order_items', 'subscribers', 'messages']) {
+      await tx.unsafe(
+        `SELECT setval(pg_get_serial_sequence('${t}', 'id'), COALESCE((SELECT MAX(id) FROM ${t}), 1))`
+      );
+    }
+  });
+
+  return report;
+}
