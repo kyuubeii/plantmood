@@ -611,7 +611,29 @@
           <label class="field"><span>New password (min 8 characters)</span><input name="password" type="password" minlength="8" required></label>
           <p class="form-msg error"></p>
           <button class="btn btn--small" type="submit" style="margin-top:1.2rem;">Update password</button>
-        </form>`;
+        </form>
+
+        <div class="drawer" id="backup-box" style="max-width:640px;">
+          <h4 style="margin-top:0;">Backup &amp; restore</h4>
+          <p class="muted" style="font-size:0.95rem;margin:0 0 1rem;">
+            Download a copy of the shop to your own computer. The spreadsheets open in
+            Excel or Google Sheets, and you can edit prices there and load them back.
+          </p>
+
+          <h5 style="margin:0 0 0.5rem;">Download</h5>
+          <div id="backup-downloads" class="muted">Loading&hellip;</div>
+
+          <div class="spacer-s"></div>
+          <h5 style="margin:1.4rem 0 0.5rem;">Restore from a spreadsheet</h5>
+          <p class="muted" style="font-size:0.95rem;margin:0 0 0.8rem;">
+            Nothing is deleted: rows are matched by name and updated, and anything you
+            removed from the spreadsheet is left alone. You will see exactly what
+            changes before anything is saved.
+          </p>
+          <input type="file" id="restore-file" accept=".csv,text/csv">
+          <button class="btn btn--small" id="restore-preview" type="button" style="margin-left:0.6rem;" disabled>Preview changes</button>
+          <div id="restore-out" style="margin-top:1rem;"></div>
+        </div>`;
 
       document.getElementById('ship-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -629,6 +651,151 @@
           e.target.querySelector('.form-msg').textContent = err.message;
         }
       });
+
+      wireBackup();
+    }
+
+    // ---- Settings → Backup & restore ----------------------------------------
+    // Downloads go through fetch rather than a plain link because every admin
+    // request needs the x-admin-token header, which a link cannot send.
+    async function downloadAuthed(path, fallbackName) {
+      const res = await fetch(path, { headers: { 'x-admin-token': T() } });
+      if (!res.ok) {
+        if (res.status === 401) { showLogin(); throw new Error('Session expired — please log in again.'); }
+        throw new Error('Download failed.');
+      }
+      const disp = res.headers.get('content-disposition') || '';
+      const m = /filename="([^"]+)"/.exec(disp);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = m ? m[1] : fallbackName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Give the browser a moment to start the download before revoking.
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }
+
+    const LABELS = {
+      products: 'Products & prices',
+      categories: 'Categories',
+      site_content: 'Website text & photos you changed',
+      orders: 'Orders',
+      order_items: 'Order line items',
+    };
+
+    async function wireBackup() {
+      const box = document.getElementById('backup-downloads');
+      let tables = [];
+      try { tables = await authed('/api/admin/backup/tables'); }
+      catch { box.textContent = 'Could not load the backup list.'; return; }
+
+      box.innerHTML = `
+        <p style="margin:0 0 0.8rem;">
+          <button class="btn btn--solid btn--small" type="button" data-dl="snapshot">
+            Download everything (.json)
+          </button>
+          <span class="muted" style="font-size:0.9rem;margin-left:0.6rem;">
+            one file, used to restore the whole shop
+          </span>
+        </p>
+        <table class="admin-table" style="margin-top:0.6rem;">
+          <tbody>
+            ${tables.map(t => `
+              <tr>
+                <td>${PM.esc(LABELS[t.table] || t.table)}</td>
+                <td class="muted">${t.rows} row${t.rows === 1 ? '' : 's'}</td>
+                <td style="text-align:right;">
+                  <button class="btn btn--small" type="button" data-dl="csv:${PM.esc(t.table)}">Download .csv</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+        <p class="muted" style="font-size:0.9rem;margin:0.8rem 0 0;">
+          Order files contain customer names, phone numbers and addresses — keep them private.
+          Photos are not inside these files; they stay in storage.
+        </p>`;
+
+      box.querySelectorAll('[data-dl]').forEach(b => b.onclick = async () => {
+        const what = b.dataset.dl;
+        const label = b.textContent;
+        b.disabled = true; b.textContent = 'Preparing…';
+        try {
+          if (what === 'snapshot') await downloadAuthed('/api/admin/backup/snapshot', 'plantmood-backup.json');
+          else await downloadAuthed('/api/admin/backup/csv/' + what.slice(4), 'plantmood.csv');
+          PM.toast('Downloaded');
+        } catch (err) { PM.toast(err.message); }
+        finally { b.disabled = false; b.textContent = label; }
+      });
+
+      // ---- restore -----------------------------------------------------------
+      const file = document.getElementById('restore-file');
+      const previewBtn = document.getElementById('restore-preview');
+      const out = document.getElementById('restore-out');
+      let csvText = '';
+
+      file.onchange = async () => {
+        out.innerHTML = '';
+        csvText = '';
+        previewBtn.disabled = true;
+        const f = file.files[0];
+        if (!f) return;
+        if (f.size > 10 * 1024 * 1024) { out.innerHTML = '<p class="form-msg error">That file is larger than 10 MB.</p>'; return; }
+        csvText = await f.text();
+        previewBtn.disabled = false;
+      };
+
+      const esc = PM.esc;
+      const renderReport = (r, applied) => {
+        if (r.problems && r.problems.length) {
+          out.innerHTML = `<p class="form-msg error">Nothing was changed — this file has ${r.problems.length} problem(s):</p>
+            <ul class="muted">${r.problems.slice(0, 10).map(m => `<li>${esc(m)}</li>`).join('')}</ul>`;
+          return;
+        }
+        const rows = (r.changes || []).map(c => c.kind === 'new'
+          ? `<tr><td><strong>New</strong></td><td>${esc(c.key)}</td><td class="muted">will be added</td></tr>`
+          : `<tr><td>Changed</td><td>${esc(c.key)}</td><td class="muted">${c.fields.map(f =>
+              `${esc(f.field)}: ${esc(f.from.slice(0, 40))} → <strong>${esc(f.to.slice(0, 40))}</strong>`).join('<br>')}</td></tr>`
+        ).join('');
+        out.innerHTML = `
+          <p class="${applied ? 'form-msg' : 'muted'}">
+            ${applied ? '✅ Restored. ' : ''}<strong>${r.creates}</strong> new,
+            <strong>${r.updates}</strong> changed, ${r.unchanged} unchanged
+            &mdash; from ${r.total} row(s) of “${esc(r.table)}”.
+          </p>
+          ${rows ? `<div style="max-height:320px;overflow:auto;"><table class="admin-table"><tbody>${rows}</tbody></table></div>` : ''}
+          ${r.truncated ? `<p class="muted">…and ${r.truncated} more.</p>` : ''}
+          ${!applied && (r.creates || r.updates)
+            ? '<button class="btn btn--solid btn--small" type="button" id="restore-apply" style="margin-top:1rem;">Apply these changes</button>'
+            : (!applied ? '<p class="muted">Nothing to apply.</p>' : '')}`;
+
+        const applyBtn = document.getElementById('restore-apply');
+        if (applyBtn) applyBtn.onclick = async () => {
+          if (!confirm(`Apply ${r.creates} new and ${r.updates} changed row(s) to “${r.table}”?`)) return;
+          applyBtn.disabled = true; applyBtn.textContent = 'Restoring…';
+          try {
+            const res = await authed('/api/admin/restore', { method: 'POST', body: { csv: csvText, apply: true } });
+            renderReport(res, true);
+            PM.toast('Restored');
+          } catch (err) {
+            out.innerHTML = `<p class="form-msg error">${esc(err.message)}</p>`;
+          }
+        };
+      };
+
+      previewBtn.onclick = async () => {
+        previewBtn.disabled = true; previewBtn.textContent = 'Checking…';
+        try {
+          const r = await authed('/api/admin/restore', { method: 'POST', body: { csv: csvText, apply: false } });
+          renderReport(r, false);
+        } catch (err) {
+          out.innerHTML = `<p class="form-msg error">${esc(err.message)}</p>`;
+        } finally {
+          previewBtn.disabled = false; previewBtn.textContent = 'Preview changes';
+        }
+      };
     }
 
     /* ---------- boot ---------- */

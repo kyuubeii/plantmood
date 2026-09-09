@@ -7,6 +7,7 @@ import {
   getContentOverrides, getContentValue, setContentValue, deleteContentValue,
 } from './db.js';
 import { saveUploadedImage, removeUploadedImage, publicUrl } from './storage.js';
+import { snapshot, exportCsv, analyseCsv, applyCsv, CSV_TABLES } from './backup.js';
 import { CONTENT_REGISTRY, contentByKey } from './content.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -19,6 +20,7 @@ export const app = express();
 // as read and the default (small) JSON parser below skips it (no double-parse).
 app.use('/api/admin/content/image', express.json({ limit: '14mb' }));
 app.use('/api/admin/products', express.json({ limit: '14mb' }));
+app.use('/api/admin/restore', express.json({ limit: '14mb' }));
 app.use(express.json());
 
 // Every route below talks to Postgres, so handlers are async. Express 4 does
@@ -459,6 +461,67 @@ app.put('/api/admin/settings', adminAuth, ah(async (req, res) => {
     await setSetting('whatsapp_number', clean(req.body.whatsapp_number, 20).replace(/[^\d]/g, ''));
   }
   res.json({ ok: true });
+}));
+
+// ------- backup & restore (Settings → Backup) -------
+// The owner can download and restore the shop without touching a terminal.
+// Everything here shares server/backup.js with the command-line scripts, so the
+// safety rules cannot drift between the two.
+
+// Full snapshot, the same shape the nightly job stores.
+app.get('/api/admin/backup/snapshot', adminAuth, ah(async (req, res) => {
+  const snap = await snapshot();
+  const stamp = snap.takenAt.slice(0, 19).replace(/[:T]/g, '-');
+  res.setHeader('Content-Disposition', `attachment; filename="plantmood-${stamp}.json"`);
+  res.type('application/json').send(JSON.stringify(snap, null, 2));
+}));
+
+// One table as a spreadsheet.
+app.get('/api/admin/backup/csv/:table', adminAuth, ah(async (req, res) => {
+  const table = String(req.params.table);
+  if (!CSV_TABLES[table]) return res.status(400).json({ error: 'Unknown table.' });
+  const { csv } = await exportCsv(table);
+  const stamp = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Disposition', `attachment; filename="${table}-${stamp}.csv"`);
+  res.type('text/csv; charset=utf-8').send(csv);
+}));
+
+app.get('/api/admin/backup/tables', adminAuth, ah(async (req, res) => {
+  const out = [];
+  for (const [name, shape] of Object.entries(CSV_TABLES)) {
+    const [{ count }] = await sql.unsafe(`SELECT count(*)::int AS count FROM "${name}"`);
+    out.push({ table: name, rows: count, importable: !shape.exportOnly });
+  }
+  res.json(out);
+}));
+
+// Restore runs in two steps so nothing is written until the owner has seen
+// exactly what would change: preview first, then apply the same file.
+app.post('/api/admin/restore', adminAuth, ah(async (req, res) => {
+  const text = String(req.body.csv || '');
+  const apply = req.body.apply === true;
+  if (!text.trim()) return res.status(400).json({ error: 'That file is empty.' });
+
+  let result;
+  try {
+    result = apply ? await applyCsv(text) : await analyseCsv(text);
+  } catch (e) {
+    return res.status(400).json({ error: e.message, problems: e.problems });
+  }
+  res.json({
+    applied: apply,
+    table: result.table,
+    total: result.rows.length,
+    creates: result.creates,
+    updates: result.updates,
+    unchanged: result.unchanged,
+    ignored: result.ignored,
+    problems: result.problems,
+    // Enough detail for the owner to recognise a mistake, not so much that a
+    // 55-row diff becomes unreadable.
+    changes: result.changes.slice(0, 50),
+    truncated: Math.max(0, result.changes.length - 50),
+  });
 }));
 
 // ------- site content (editable text & images) -------

@@ -107,6 +107,22 @@ deployment.
 Also worth checking: a free-tier Supabase project **auto-pauses after 7 days of
 inactivity**, which takes the shop down until it is resumed from the dashboard.
 
+## Backup from the admin panel
+
+**Settings → Backup & restore** does all of this without a terminal:
+
+- **Download everything (.json)** — one file, the same shape the nightly job stores
+- **Download .csv** per table — products & prices, categories, site text, orders
+- **Restore from a spreadsheet** — pick a CSV, see exactly what would change, then apply
+
+Restoring is two steps on purpose: the preview lists every row that would be
+added or changed, field by field with before → after, and nothing is written
+until that is confirmed. The panel and the CLI share `server/backup.js`, so the
+safety rules below hold identically in both.
+
+Downloads go through `fetch` and a Blob rather than a plain link, because every
+admin request needs the `x-admin-token` header that a link cannot send.
+
 ## Spreadsheet export / import (CSV)
 
 ```bash

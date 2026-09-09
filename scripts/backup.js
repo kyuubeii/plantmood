@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { sql } from '../server/db.js';
+import { snapshot as takeSnapshot } from '../server/backup.js';
 
 const BUCKET = process.env.SUPABASE_BACKUP_BUCKET || 'plantmood-backups';
 const KEEP_DAYS = Number(process.env.PLANTMOOD_BACKUP_KEEP_DAYS || 30);
@@ -58,18 +59,7 @@ if (listOnly) {
 }
 
 // --- collect -----------------------------------------------------------------
-const snapshot = {
-  takenAt: new Date().toISOString(),
-  categories: await sql`SELECT * FROM categories ORDER BY sort, slug`,
-  products: await sql`SELECT * FROM products ORDER BY id`,
-  site_content: await sql`SELECT * FROM site_content ORDER BY key`,
-  // The admin password hash is included so a restore does not lock the owner out.
-  settings: await sql`SELECT * FROM settings ORDER BY key`,
-  orders: await sql`SELECT * FROM orders ORDER BY id`,
-  order_items: await sql`SELECT * FROM order_items ORDER BY id`,
-  subscribers: await sql`SELECT * FROM subscribers ORDER BY id`,
-  messages: await sql`SELECT * FROM messages ORDER BY id`,
-};
+const snapshot = await takeSnapshot();
 
 const body = JSON.stringify(snapshot, null, 2);
 const stamp = snapshot.takenAt.slice(0, 19).replace(/[:T]/g, '-');
